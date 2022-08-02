@@ -32,7 +32,11 @@ def get_train_eval_loaders(path, batch_size=256):
     train_dataset = CIFAR100(root=path, train=True, transform=train_transform, download=True)
     test_dataset = CIFAR100(root=path, train=False, transform=test_transform, download=False)
 
-    train_eval_indices = [random.randint(0, len(train_dataset) - 1) for i in range(len(test_dataset))]
+    train_eval_indices = [
+        random.randint(0, len(train_dataset) - 1)
+        for _ in range(len(test_dataset))
+    ]
+
     train_eval_dataset = Subset(train_dataset, train_eval_indices)
 
     train_loader = DataLoader(

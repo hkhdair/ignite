@@ -92,11 +92,14 @@ class BaseOutputHandler(BaseHandler):
         state_attributes: Optional[List[str]] = None,
     ):
 
-        if metric_names is not None:
-            if not (isinstance(metric_names, list) or (isinstance(metric_names, str) and metric_names == "all")):
-                raise TypeError(
-                    f"metric_names should be either a list or equal 'all', got {type(metric_names)} instead."
-                )
+        if (
+            metric_names is not None
+            and not isinstance(metric_names, list)
+            and (not isinstance(metric_names, str) or metric_names != "all")
+        ):
+            raise TypeError(
+                f"metric_names should be either a list or equal 'all', got {type(metric_names)} instead."
+            )
 
         if output_transform is not None and not callable(output_transform):
             raise TypeError(f"output_transform should be a function, got {type(output_transform)} instead.")

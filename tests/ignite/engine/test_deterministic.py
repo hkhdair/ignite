@@ -82,7 +82,7 @@ def test_update_dataloader():
             new_batches.append(t)
 
         for i in range(num_epochs):
-            assert all([(b1 == b2).all() for b1, b2 in zip(seen_batches[i], new_batches[i])])
+            assert all((b1 == b2).all() for b1, b2 in zip(seen_batches[i], new_batches[i]))
 
     _test()
     _test("weighted")
@@ -105,23 +105,26 @@ def test_reproducible_batch_sampler():
     seen_batches = []
     num_epochs = 3
     for i in range(num_epochs):
-        t = []
-        for b in dataloader_:
-            t.append(b)
+        t = list(dataloader_)
         seen_batches.append(t)
         torch.manual_seed(12 + i + 1)
 
     for i in range(num_epochs - 1):
         for j in range(i + 1, num_epochs):
-            assert not all([(b1 == b2).all() for b1, b2 in zip(seen_batches[i], seen_batches[j])])
+            assert not all(
+                (b1 == b2).all()
+                for b1, b2 in zip(seen_batches[i], seen_batches[j])
+            )
+
 
     for resume_epoch in range(num_epochs):
         torch.manual_seed(12 + resume_epoch)
         dataloader_ = update_dataloader(dataloader, ReproducibleBatchSampler(dataloader.batch_sampler))
-        resumed_seen_batches = []
-        for b in dataloader_:
-            resumed_seen_batches.append(b)
-        assert all([(b1 == b2).all() for b1, b2 in zip(seen_batches[resume_epoch], resumed_seen_batches)])
+        resumed_seen_batches = list(dataloader_)
+        assert all(
+            (b1 == b2).all()
+            for b1, b2 in zip(seen_batches[resume_epoch], resumed_seen_batches)
+        )
 
 
 def _test_keep_random_state(with_numpy):
@@ -727,9 +730,7 @@ def _test_gradients_on_resume(
             chkpt.append(fp)
 
         def log_event_filter(_, event):
-            if (event // save_iter == 1) and 1 <= (event % save_iter) <= 5:
-                return True
-            return False
+            return event // save_iter == 1 and 1 <= (event % save_iter) <= 5
 
         @trainer.on(Events.ITERATION_COMPLETED(event_filter=log_event_filter))
         def write_data_grads_weights(e):
@@ -837,8 +838,7 @@ def test_run_finite_iterator_no_epoch_length():
     unknown_size = 11
 
     def finite_unk_size_data_iter():
-        for i in range(unknown_size):
-            yield i
+        yield from range(unknown_size)
 
     bc = BatchChecker(data=list(range(unknown_size)))
 

@@ -36,9 +36,10 @@ def _test_psnr(y_pred, y, data_range, device):
 
     np_y_pred = y_pred.cpu().numpy()
     np_y = y.cpu().numpy()
-    np_psnr = 0
-    for np_y_pred_, np_y_ in zip(np_y_pred, np_y):
-        np_psnr += ski_psnr(np_y_, np_y_pred_, data_range=data_range)
+    np_psnr = sum(
+        ski_psnr(np_y_, np_y_pred_, data_range=data_range)
+        for np_y_pred_, np_y_ in zip(np_y_pred, np_y)
+    )
 
     assert torch.gt(psnr_compute, 0.0)
     assert isinstance(psnr_compute, torch.Tensor)
@@ -304,8 +305,8 @@ def test_distrib_xla_nprocs(xmp_executor):
 @pytest.mark.skipif(not idist.has_hvd_support, reason="Skip if no Horovod dist support")
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
-    device = "cpu" if not torch.cuda.is_available() else "cuda"
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_integration, (device,), np=nproc, do_init=True)
     gloo_hvd_executor(_test_distrib_accumulator_device, (device,), np=nproc, do_init=True)

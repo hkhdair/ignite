@@ -70,7 +70,7 @@ def test_inception_model_probability():
     y = InceptionModel(return_features=False)(x)
     assert pytest.approx(torch.sum(y[0]).item()) == 1.0
     assert pytest.approx(torch.sum(y[1]).item()) == 1.0
-    assert torch.all(0 <= y)
+    assert torch.all(y >= 0)
 
 
 @pytest.fixture()

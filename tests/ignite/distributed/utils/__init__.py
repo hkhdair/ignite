@@ -28,9 +28,8 @@ def _test_distrib_config(local_rank, backend, ws, true_device, rank=None, true_i
     elif backend == "xla-tpu":
         assert true_device in this_device.type
 
-    if rank is None:
-        if idist.model_name() == "native-dist":
-            rank = dist.get_rank()
+    if rank is None and idist.model_name() == "native-dist":
+        rank = dist.get_rank()
 
     if rank is not None:
         assert idist.get_rank() == rank
@@ -83,16 +82,16 @@ def _test_distrib_all_reduce(device):
     rank = idist.get_rank()
     t = torch.tensor(rank * 2.0 + 1.0, device=device)
     res = idist.all_reduce(t)
-    assert res.item() == sum([i * 2.0 + 1.0 for i in range(idist.get_world_size())])
+    assert res.item() == sum(i * 2.0 + 1.0 for i in range(idist.get_world_size()))
 
     t = torch.tensor(rank * 2.0 + 1.0, device=device)
     res = idist.all_reduce(t, "MIN").item()
-    true_val = min([i * 2 + 1 for i in range(idist.get_world_size())])
+    true_val = min(i * 2 + 1 for i in range(idist.get_world_size()))
     assert res == true_val, f"{res} vs {true_val}"
 
     t = torch.tensor(rank * 2.0 + 1.0, device=device)
     res = idist.all_reduce(t, "MAX").item()
-    true_val = max([i * 2.0 + 1.0 for i in range(idist.get_world_size())])
+    true_val = max(i * 2.0 + 1.0 for i in range(idist.get_world_size()))
     assert res == true_val, f"{res} vs {true_val}"
 
     t = torch.ones(4, 4, device=device) * (rank * 2.0 + 1.0)
@@ -127,7 +126,7 @@ def _test_distrib_all_gather(device):
 
     t = torch.tensor(idist.get_rank(), device=device)
     res = idist.all_gather(t)
-    true_res = torch.tensor([i for i in range(idist.get_world_size())], device=device)
+    true_res = torch.tensor(list(range(idist.get_world_size())), device=device)
     assert (res == true_res).all()
 
     x = "test-test"
@@ -138,10 +137,7 @@ def _test_distrib_all_gather(device):
     assert res == true_res
 
     base_x = "tests/ignite/distributed/utils/test_native.py" * 2000
-    x = base_x
-    if idist.get_rank() == 0:
-        x = "abc"
-
+    x = "abc" if idist.get_rank() == 0 else base_x
     res = idist.all_gather(x)
     true_res = ["abc"] + [base_x] * (idist.get_world_size() - 1)
     assert res == true_res
@@ -218,7 +214,7 @@ def _test_distrib_broadcast(device):
 def _test_distrib_barrier(device):
 
     t = torch.tensor([idist.get_rank()], device=device, dtype=torch.float)
-    true_res = sum([i for i in range(idist.get_world_size())])
+    true_res = sum(list(range(idist.get_world_size())))
 
     if idist.get_rank() == 0:
         t += 10.0

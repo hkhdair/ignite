@@ -304,10 +304,10 @@ def test_integration_as_context_manager():
 def no_site_packages():
     import sys
 
-    polyaxon_client_modules = {}
-    for k in sys.modules:
-        if "polyaxon" in k:
-            polyaxon_client_modules[k] = sys.modules[k]
+    polyaxon_client_modules = {
+        k: sys.modules[k] for k in sys.modules if "polyaxon" in k
+    }
+
     for k in polyaxon_client_modules:
         del sys.modules[k]
 

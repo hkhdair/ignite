@@ -275,8 +275,8 @@ def test_distrib_xla_nprocs(xmp_executor):
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    device = "cpu" if not torch.cuda.is_available() else "cuda"
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_integration, (device,), np=nproc, do_init=True)
     gloo_hvd_executor(_test_distrib_accumulator_device, (device,), np=nproc, do_init=True)

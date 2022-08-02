@@ -68,13 +68,10 @@ def test_pbar_file(tmp_path):
     engine = Engine(update_fn)
 
     file_path = tmp_path / "temp.txt"
-    file = open(str(file_path), "w+")
-
-    pbar = ProgressBar(file=file)
-    pbar.attach(engine, ["a"])
-    engine.run(loader, max_epochs=n_epochs)
-
-    file.close()  # Force a flush of the buffer. file.flush() does not work.
+    with open(str(file_path), "w+") as file:
+        pbar = ProgressBar(file=file)
+        pbar.attach(engine, ["a"])
+        engine.run(loader, max_epochs=n_epochs)
 
     file = open(str(file_path), "r")
     lines = file.readlines()
@@ -101,12 +98,9 @@ def test_pbar_log_message(capsys):
 
 def test_pbar_log_message_file(tmp_path):
     file_path = tmp_path / "temp.txt"
-    file = open(str(file_path), "w+")
-
-    pbar = ProgressBar(file=file)
-    pbar.log_message("test")
-
-    file.close()  # Force a flush of the buffer. file.flush() does not work.
+    with open(str(file_path), "w+") as file:
+        pbar = ProgressBar(file=file)
+        pbar.log_message("test")
 
     file = open(str(file_path), "r")
     lines = file.readlines()
@@ -543,8 +537,7 @@ def test_tqdm_logger_iter_without_epoch_length(capsys):
     size = 11
 
     def finite_size_data_iter(size):
-        for i in range(size):
-            yield i
+        yield from range(size)
 
     def train_step(trainer, batch):
         pass

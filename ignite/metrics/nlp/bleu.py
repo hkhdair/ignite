@@ -12,8 +12,7 @@ __all__ = ["Bleu"]
 
 def _closest_ref_length(references: Sequence[Sequence[Any]], hyp_len: int) -> int:
     ref_lens = (len(reference) for reference in references)
-    closest_ref_len = min(ref_lens, key=lambda ref_len: (abs(ref_len - hyp_len), ref_len))
-    return closest_ref_len
+    return min(ref_lens, key=lambda ref_len: (abs(ref_len - hyp_len), ref_len))
 
 
 class _Smoother:
@@ -207,8 +206,7 @@ class Bleu(Metric):
 
         # Compute the geometric mean
         s = [w_i * math.log(p_i) for w_i, p_i in zip(self.weights, p_n)]
-        gm = bp * math.exp(math.fsum(s))
-        return gm
+        return bp * math.exp(math.fsum(s))
 
     def _sentence_bleu(self, references: Sequence[Sequence[Any]], candidates: Sequence[Any]) -> float:
         return self._corpus_bleu([references], [candidates])
@@ -221,14 +219,12 @@ class Bleu(Metric):
         hyp_length_sum, ref_length_sum = self._n_gram_counter(
             references=references, candidates=candidates, p_numerators=p_numerators, p_denominators=p_denominators
         )
-        bleu_score = self._brevity_penalty_smoothing(
+        return self._brevity_penalty_smoothing(
             p_numerators=p_numerators,
             p_denominators=p_denominators,
             hyp_length_sum=hyp_length_sum,
             ref_length_sum=ref_length_sum,
         )
-
-        return bleu_score
 
     @reinit__is_reduced
     def reset(self) -> None:
@@ -269,13 +265,12 @@ class Bleu(Metric):
     @sync_all_reduce("p_numerators", "p_denominators", "hyp_length_sum", "ref_length_sum")
     def _compute_micro(self) -> float:
 
-        bleu_score = self._brevity_penalty_smoothing(
+        return self._brevity_penalty_smoothing(
             p_numerators=self.p_numerators,
             p_denominators=self.p_denominators,
             hyp_length_sum=self.hyp_length_sum,
             ref_length_sum=self.ref_length_sum,
         )
-        return bleu_score
 
     def compute(self) -> None:
         if self.average == "macro":

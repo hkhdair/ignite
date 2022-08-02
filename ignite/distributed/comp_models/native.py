@@ -42,9 +42,11 @@ if has_native_dist_support:
 
         @staticmethod
         def create_from_context() -> Optional["_NativeDistModel"]:
-            if not (dist.is_available() and dist.is_initialized()):
-                return None
-            return _NativeDistModel()
+            return (
+                _NativeDistModel()
+                if (dist.is_available() and dist.is_initialized())
+                else None
+            )
 
         @staticmethod
         def create_from_backend(
@@ -460,9 +462,9 @@ if has_native_dist_support:
 
         nodelist = nodelist.replace(" ", "")
 
-        for node in re.findall(nodelist_match, nodelist):
+        node_match = r"(.+)\[((,?[0-9]+-?,?-?){0,})\](.*)?"
 
-            node_match = r"(.+)\[((,?[0-9]+-?,?-?){0,})\](.*)?"
+        for node in re.findall(nodelist_match, nodelist):
 
             match = re.search(node_match, node)
 
@@ -472,9 +474,9 @@ if has_native_dist_support:
             else:
                 # holds the ranges of nodes as a string
                 # now we can manipulate the string and cast it to a list of numbers
-                num = str(match.group(2)).replace("[", "").replace("]", "")
+                num = str(match[2]).replace("[", "").replace("]", "")
 
-                if len(num) == 0:
+                if not num:
                     raise ValueError(f"hostlist invalid : {nodelist}")
 
                 num_list = num.split(",")
@@ -483,7 +485,7 @@ if has_native_dist_support:
                 ranges = [elem.split("-") if "-" in elem else [elem, elem] for elem in num_list]
 
                 # if the node numbers contain leading zeros, store them to be
-                lead_zeros = max([len(s) - len(s.lstrip("0")) for s, _ in ranges])
+                lead_zeros = max(len(s) - len(s.lstrip("0")) for s, _ in ranges)
 
                 # list of expanded ranges of node numbers
                 nodes_list = [list(range(int(s), int(e) + 1)) for s, e in ranges]
@@ -498,10 +500,10 @@ if has_native_dist_support:
                 hostlist_tmp = [str(elem).zfill(lead_zeros + 1) for elem in final_list]
 
                 # append hostname to the node numbers
-                hostlist_no_suffix = [match.group(1) + elem for elem in hostlist_tmp]
+                hostlist_no_suffix = [match[1] + elem for elem in hostlist_tmp]
 
                 # append suffix to hostlist if there is one
-                final_hostlist = [elem + match.group(4) for elem in hostlist_no_suffix]
+                final_hostlist = [elem + match[4] for elem in hostlist_no_suffix]
 
                 result_hostlist += final_hostlist
 
@@ -530,11 +532,10 @@ if has_native_dist_support:
         defined_pth_ddp_env_vars = [v is not None for v in pth_ddp_env_vars.values()]
         if all(defined_pth_ddp_env_vars):
             nnodes = int(environ["SLURM_JOB_NUM_NODES"])
-            if nnodes > 1:
-                # ensure that all pth_ddp_env_vars are consistent with slurm vars
-                for key in ["RANK", "LOCAL_RANK", "WORLD_SIZE"]:
-                    slurm_var = cast(int, ddp_vars[key])
-                    pth_var = int(cast(str, pth_ddp_env_vars[key]))
+            for key in ["RANK", "LOCAL_RANK", "WORLD_SIZE"]:
+                slurm_var = cast(int, ddp_vars[key])
+                pth_var = int(cast(str, pth_ddp_env_vars[key]))
+                if nnodes > 1:
                     if slurm_var != pth_var:
                         raise RuntimeError(
                             "Environment variable defined for PyTorch Distributed context is inconsistent with "
@@ -542,20 +543,15 @@ if has_native_dist_support:
                             f"SLURM vars: {ddp_vars}\n"
                             f"PTH vars: {pth_ddp_env_vars}\n"
                         )
-            else:
-                # ensure that PTH RANK >= SLURM_PROCID, PTH LOCAL_RANK >= SLURM_LOCALID,
-                # PTH WORLD_SIZE >= SLURM_NTASKS
-                for key in ["RANK", "LOCAL_RANK", "WORLD_SIZE"]:
-                    slurm_var = cast(int, ddp_vars[key])
-                    pth_var = int(cast(str, pth_ddp_env_vars[key]))
-                    if pth_var < slurm_var:
-                        raise RuntimeError(
-                            "Environment variable defined for PyTorch Distributed context is "
-                            "inconsistent with equivalent SLURM env variable. "
-                            f"We expect that {key}: {pth_var} >= {slurm_var}\n"
-                            f"SLURM vars: {ddp_vars}\n"
-                            f"PTH vars: {pth_ddp_env_vars}\n"
-                        )
+                elif pth_var < slurm_var:
+                    raise RuntimeError(
+                        "Environment variable defined for PyTorch Distributed context is "
+                        "inconsistent with equivalent SLURM env variable. "
+                        f"We expect that {key}: {pth_var} >= {slurm_var}\n"
+                        f"SLURM vars: {ddp_vars}\n"
+                        f"PTH vars: {pth_ddp_env_vars}\n"
+                    )
+                else:
                     ddp_vars[key] = pth_var
             # set up MASTER_ADDR and MASTER_PORT from PTH
             ddp_vars["MASTER_ADDR"] = cast(str, pth_ddp_env_vars["MASTER_ADDR"])
@@ -579,13 +575,12 @@ if has_native_dist_support:
                 # expand hostname list as scontrol
                 hostnames = " ".join(_expand_hostlist(nodelist)).encode("utf-8")
                 method = "ignite"
-            # at least one hostname should be defined
-            hostname_list = hostnames.split()
-            if len(hostname_list) < 1:
-                raise RuntimeError(f"No hostname detected in SLURM_JOB_NODELIST by {method} (nodelist={nodelist})")
-            # master address is the first hostname of nodes list
-            ddp_vars["MASTER_ADDR"] = str(hostname_list[0].decode("utf-8"))
+            if hostname_list := hostnames.split():
+                # master address is the first hostname of nodes list
+                ddp_vars["MASTER_ADDR"] = str(hostname_list[0].decode("utf-8"))
 
+            else:
+                raise RuntimeError(f"No hostname detected in SLURM_JOB_NODELIST by {method} (nodelist={nodelist})")
         if ddp_vars["MASTER_PORT"] is None:
             # port should be the same over all process
             slurm_port = environ["SLURM_JOB_ID"]

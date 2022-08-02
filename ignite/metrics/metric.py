@@ -289,15 +289,17 @@ class Metric(metaclass=ABCMeta):
                     f"Transformed engine output for {self.__class__.__name__} metric should be a tuple/list, "
                     f"but given {type(output)}"
                 )
-            if not all([k in output for k in self.required_output_keys]):
+            if any(k not in output for k in self.required_output_keys):
                 raise ValueError(
                     "When transformed engine's output is a mapping, "
                     f"it should contain {self.required_output_keys} keys, but given {list(output.keys())}"
                 )
             output = tuple(output[k] for k in self.required_output_keys)
 
-        if isinstance(output, Sequence) and all([_is_list_of_tensors_or_numbers(o) for o in output]):
-            if not (len(output) == 2 and len(output[0]) == len(output[1])):
+        if isinstance(output, Sequence) and all(
+            _is_list_of_tensors_or_numbers(o) for o in output
+        ):
+            if len(output) != 2 or len(output[0]) != len(output[1]):
                 raise ValueError(
                     f"Output should have 2 items of the same length, "
                     f"got {len(output)} and {len(output[0])}, {len(output[1])}"
@@ -333,15 +335,13 @@ class Metric(metaclass=ABCMeta):
 
             for key, value in result.items():
                 engine.state.metrics[key] = value
-            engine.state.metrics[name] = result
-        else:
-            if isinstance(result, torch.Tensor):
-                if len(result.size()) == 0:
-                    result = result.item()
-                elif "cpu" not in result.device.type:
-                    result = result.cpu()
+        elif isinstance(result, torch.Tensor):
+            if len(result.size()) == 0:
+                result = result.item()
+            elif "cpu" not in result.device.type:
+                result = result.cpu()
 
-            engine.state.metrics[name] = result
+        engine.state.metrics[name] = result
 
     def _check_usage(self, usage: Union[str, MetricUsage]) -> MetricUsage:
         if isinstance(usage, str):
@@ -556,7 +556,7 @@ def sync_all_reduce(*attrs: Any) -> Callable:
                     "Decorator sync_all_reduce should be used on ignite.metric.Metric class methods only"
                 )
             ws = idist.get_world_size()
-            if len(attrs) > 0 and not self._is_reduced:
+            if attrs and not self._is_reduced:
                 if ws > 1:
                     for attr in attrs:
                         op_kwargs = {}
@@ -601,7 +601,9 @@ def reinit__is_reduced(func: Callable) -> Callable:
 
 
 def _is_list_of_tensors_or_numbers(x: Sequence[Union[torch.Tensor, float]]) -> bool:
-    return isinstance(x, Sequence) and all([isinstance(t, (torch.Tensor, Number)) for t in x])
+    return isinstance(x, Sequence) and all(
+        isinstance(t, (torch.Tensor, Number)) for t in x
+    )
 
 
 def _to_batched_tensor(x: Union[torch.Tensor, float], device: Optional[torch.device] = None) -> torch.Tensor:

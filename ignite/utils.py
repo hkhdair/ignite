@@ -181,11 +181,9 @@ def setup_logger(
         distributed_rank = idist.get_rank()
 
     # Remove previous handlers
-    if distributed_rank > 0 or reset:
-
-        if logger.hasHandlers():
-            for h in list(logger.handlers):
-                logger.removeHandler(h)
+    if (distributed_rank > 0 or reset) and logger.hasHandlers():
+        for h in list(logger.handlers):
+            logger.removeHandler(h)
 
     if distributed_rank > 0:
 
@@ -261,7 +259,7 @@ def deprecated(
     F = TypeVar("F", bound=Callable[..., Any])
 
     def decorator(func: F) -> F:
-        func_doc = func.__doc__ if func.__doc__ else ""
+        func_doc = func.__doc__ or ""
         deprecation_warning = (
             f"This function has been deprecated since version {deprecated_in}"
             + (f" and will be removed in version {removed_in}" if removed_in else "")
@@ -275,7 +273,10 @@ def deprecated(
             warnings.warn(deprecation_warning, DeprecationWarning, stacklevel=2)
             return func(*args, **kwargs)
 
-        appended_doc = f".. deprecated:: {deprecated_in}" + ("\n\n\t" if len(reasons) > 0 else "")
+        appended_doc = f".. deprecated:: {deprecated_in}" + (
+            "\n\n\t" if reasons else ""
+        )
+
 
         for reason in reasons:
             appended_doc += "\n\t- " + reason

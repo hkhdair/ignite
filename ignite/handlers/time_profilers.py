@@ -96,12 +96,12 @@ class BasicTimeProfiler:
     def _as_first_started(self, engine: Engine) -> None:
         if hasattr(engine.state.dataloader, "__len__"):
             num_iters_per_epoch = len(engine.state.dataloader)  # type: ignore[arg-type]
+        elif engine.state.epoch_length is None:
+            raise ValueError(
+                "As epoch_length is not set, we can not use BasicTimeProfiler in this case."
+                "Please, set trainer.run(..., epoch_length=epoch_length) in order to fix this."
+            )
         else:
-            if engine.state.epoch_length is None:
-                raise ValueError(
-                    "As epoch_length is not set, we can not use BasicTimeProfiler in this case."
-                    "Please, set trainer.run(..., epoch_length=epoch_length) in order to fix this."
-                )
             num_iters_per_epoch = engine.state.epoch_length
 
         self.max_epochs = cast(int, engine.state.max_epochs)
@@ -246,8 +246,11 @@ class BasicTimeProfiler:
 
         """
         total_eh_time = sum(
-            [(self.event_handlers_times[e]).sum() for e in Events if e not in self.events_to_ignore]
-        )  # type: Union[int, torch.Tensor]
+            (self.event_handlers_times[e]).sum()
+            for e in Events
+            if e not in self.events_to_ignore
+        )
+
         event_handlers_stats = dict(
             [
                 (str(e.name).replace(".", "_"), self._compute_basic_stats(self.event_handlers_times[e]))
@@ -595,12 +598,11 @@ class HandlersTimeProfiler:
 
         """
         total_eh_time = sum(
-            [
-                sum(self.event_handlers_times[e][h])
-                for e in self.event_handlers_times
-                for h in self.event_handlers_times[e]
-            ]
+            sum(self.event_handlers_times[e][h])
+            for e in self.event_handlers_times
+            for h in self.event_handlers_times[e]
         )
+
         total_eh_time = round(float(total_eh_time), 5)
 
         def compute_basic_stats(
@@ -672,7 +674,7 @@ class HandlersTimeProfiler:
                 headers.append(f"{h} ({getattr(e, 'name', str(e))})")
                 cols.append(torch.tensor(self.event_handlers_times[e][h], dtype=torch.float32))
         # Determine maximum length
-        max_len = max([x.numel() for x in cols])
+        max_len = max(x.numel() for x in cols)
 
         count_col = torch.arange(max_len, dtype=torch.float32) + 1
         cols.insert(0, count_col)
@@ -720,8 +722,8 @@ class HandlersTimeProfiler:
 
         """
         # adopted implementation of torch.autograd.profiler.build_table
-        handler_column_width = max([len(item[0]) for item in results]) + 4  # type: ignore[arg-type]
-        event_column_width = max([len(item[1]) for item in results]) + 4  # type: ignore[arg-type]
+        handler_column_width = max(len(item[0]) for item in results) + 4
+        event_column_width = max(len(item[1]) for item in results) + 4
 
         DEFAULT_COLUMN_WIDTH = 14
 

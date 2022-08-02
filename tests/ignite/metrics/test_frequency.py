@@ -93,7 +93,7 @@ def test_frequency_with_engine_distributed_with_every(distributed_context_single
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_frequency_with_engine, (None, 0.8, 1), np=nproc, do_init=True)
     gloo_hvd_executor(_test_frequency_with_engine, (None, 0.8, 10), np=nproc, do_init=True)

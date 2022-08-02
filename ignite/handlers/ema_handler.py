@@ -208,8 +208,6 @@ class EMAHandler:
             # assign the buffers
             for ema_b, model_b in zip(self.ema_model.buffers(), self.model.buffers()):
                 ema_b.data = model_b.data
-        else:
-            pass
 
     def attach(
         self,

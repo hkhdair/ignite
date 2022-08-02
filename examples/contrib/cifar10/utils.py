@@ -23,7 +23,7 @@ def get_train_test_datasets(path):
         path.mkdir(parents=True)
         download = True
     else:
-        download = True if len(os.listdir(path)) < 1 else False
+        download = len(os.listdir(path)) < 1
 
     train_ds = datasets.CIFAR10(root=path, train=True, download=download, transform=train_transform)
     test_ds = datasets.CIFAR10(root=path, train=False, download=False, transform=test_transform)

@@ -66,7 +66,7 @@ def test_epoch_metric():
     output2 = (torch.rand(4, 3), torch.randint(0, 2, size=(4, 3), dtype=torch.long))
     em.update(output2)
 
-    assert all([t.device.type == "cpu" for t in em._predictions + em._targets])
+    assert all(t.device.type == "cpu" for t in em._predictions + em._targets)
     assert torch.equal(em._predictions[0], output1[0])
     assert torch.equal(em._predictions[1], output2[0])
     assert torch.equal(em._targets[0], output1[1])
@@ -80,7 +80,7 @@ def test_epoch_metric():
     output2 = (torch.rand(4, 1), torch.randint(0, 2, size=(4, 1), dtype=torch.long))
     em.update(output2)
 
-    assert all([t.device.type == "cpu" for t in em._predictions + em._targets])
+    assert all(t.device.type == "cpu" for t in em._predictions + em._targets)
     assert torch.equal(em._predictions[0], output1[0][:, 0])
     assert torch.equal(em._predictions[1], output2[0][:, 0])
     assert torch.equal(em._targets[0], output1[1][:, 0])
@@ -231,6 +231,6 @@ def test_distrib_xla_nprocs(xmp_executor):
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_integration, (None,), np=nproc, do_init=True)

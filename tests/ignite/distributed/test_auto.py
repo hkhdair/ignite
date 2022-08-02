@@ -88,7 +88,7 @@ def _test_auto_dataloader(ws, nproc, batch_size, num_workers=1, sampler_name=Non
         # Test auto_dataloader
         assert idist.get_world_size() == ws, f"{idist.get_world_size()} vs {ws}"
 
-        shuffle = sampler is None if not isinstance(data, IterableDataset) else False
+        shuffle = False if isinstance(data, IterableDataset) else sampler is None
         dataloader = auto_dataloader(
             data, batch_size=batch_size, num_workers=num_workers, sampler=sampler, shuffle=shuffle
         )
@@ -134,7 +134,7 @@ def _test_auto_model(model, ws, device, sync_bn=False, **kwargs):
         if idist.has_native_dist_support and bnd in ("nccl", "gloo"):
             assert isinstance(model, nn.parallel.DistributedDataParallel)
             if sync_bn:
-                assert any([isinstance(m, nn.SyncBatchNorm) for m in model.modules()])
+                assert any(isinstance(m, nn.SyncBatchNorm) for m in model.modules())
             if "find_unused_parameters" in kwargs:
                 assert model.find_unused_parameters == kwargs["find_unused_parameters"]
         elif idist.has_hvd_support and bnd in ("horovod",):
@@ -145,7 +145,7 @@ def _test_auto_model(model, ws, device, sync_bn=False, **kwargs):
         assert isinstance(model, nn.Module)
 
     assert all(
-        [p.device.type == torch.device(device).type for p in model.parameters()]
+        p.device.type == torch.device(device).type for p in model.parameters()
     ), f"{[p.device.type for p in model.parameters()]} vs {torch.device(device).type}"
 
 
@@ -237,8 +237,8 @@ def test_auto_methods_nccl(distributed_context_single_node_nccl):
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_auto_methods_hvd(gloo_hvd_executor):
 
-    device = "cpu" if not torch.cuda.is_available() else "cuda"
-    np = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    np = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_auto_dataloader, args=(np, np, 1), np=np, do_init=True)
     gloo_hvd_executor(_test_auto_dataloader, args=(np, np, 10, 10), np=np, do_init=True)

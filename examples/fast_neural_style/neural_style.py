@@ -52,9 +52,9 @@ def check_dataset(args):
     else:
         raise RuntimeError(f"Invalid dataset name: {args.dataset}")
 
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0)
-
-    return train_loader
+    return DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0
+    )
 
 
 def train(args):

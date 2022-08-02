@@ -4,10 +4,7 @@ __all__ = ["CorpusForTest"]
 class CorpusForTest:
     def __init__(self, lower_split=False):
         def preproc(text):
-            if lower_split:
-                return text.lower().split()
-            else:
-                return text
+            return text.lower().split() if lower_split else text
 
         # BLEU Paper examples
         self.cand_1 = preproc("the the the the the the the")

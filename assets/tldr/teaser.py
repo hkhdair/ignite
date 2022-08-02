@@ -175,33 +175,29 @@ def training(local_rank, config):
 # --- Single computation device ---
 # $ python main.py
 #
-if __name__ == "__main__" and not (in_colab or with_torch_launch):
+if __name__ == "__main__":
+    if not (in_colab or with_torch_launch):
+        backend = None  # or "nccl", "gloo", "xla-tpu" ...
+        nproc_per_node = None  # or N to spawn N processes
+        config = {
+            "model": "resnet18",
+            "dataset": "cifar10",
+        }
 
-    backend = None  # or "nccl", "gloo", "xla-tpu" ...
-    nproc_per_node = None  # or N to spawn N processes
-    config = {
-        "model": "resnet18",
-        "dataset": "cifar10",
-    }
-
-    with idist.Parallel(backend=backend, nproc_per_node=nproc_per_node) as parallel:
-        parallel.run(training, config)
+        with idist.Parallel(backend=backend, nproc_per_node=nproc_per_node) as parallel:
+            parallel.run(training, config)
 
 
-# --- Multiple GPUs ---
-# $ python -m torch.distributed.launch --nproc_per_node=2 --use_env main.py
-#
-if __name__ == "__main__" and with_torch_launch:
+    if with_torch_launch:
+        backend = "nccl"  # or "nccl", "gloo", "xla-tpu" ...
+        nproc_per_node = None  # or N to spawn N processes
+        config = {
+            "model": "resnet18",
+            "dataset": "cifar10",
+        }
 
-    backend = "nccl"  # or "nccl", "gloo", "xla-tpu" ...
-    nproc_per_node = None  # or N to spawn N processes
-    config = {
-        "model": "resnet18",
-        "dataset": "cifar10",
-    }
-
-    with idist.Parallel(backend=backend, nproc_per_node=nproc_per_node) as parallel:
-        parallel.run(training, config)
+        with idist.Parallel(backend=backend, nproc_per_node=nproc_per_node) as parallel:
+            parallel.run(training, config)
 
 # --- Multiple TPUs ---
 # In Colab

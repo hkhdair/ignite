@@ -134,7 +134,7 @@ class ConfusionMatrix(Metric):
         if y_pred.shape[1] != self.num_classes:
             raise ValueError(f"y_pred does not have correct number of classes: {y_pred.shape[1]} vs {self.num_classes}")
 
-        if not (y.ndimension() + 1 == y_pred.ndimension()):
+        if y.ndimension() + 1 != y_pred.ndimension():
             raise ValueError(
                 f"y_pred must have shape (batch_size, num_classes (currently set to {self.num_classes}), ...) "
                 "and y must have shape of (batch_size, ...), "
@@ -234,14 +234,16 @@ def IoU(cm: ConfusionMatrix, ignore_index: Optional[int] = None) -> MetricsLambd
     if not isinstance(cm, ConfusionMatrix):
         raise TypeError(f"Argument cm should be instance of ConfusionMatrix, but given {type(cm)}")
 
-    if not (cm.average in (None, "samples")):
+    if cm.average not in (None, "samples"):
         raise ValueError("ConfusionMatrix should have average attribute either None or 'samples'")
 
-    if ignore_index is not None:
-        if not (isinstance(ignore_index, numbers.Integral) and 0 <= ignore_index < cm.num_classes):
-            raise ValueError(
-                f"ignore_index should be integer and in the range of [0, {cm.num_classes}), but given {ignore_index}"
-            )
+    if ignore_index is not None and not (
+        isinstance(ignore_index, numbers.Integral)
+        and 0 <= ignore_index < cm.num_classes
+    ):
+        raise ValueError(
+            f"ignore_index should be integer and in the range of [0, {cm.num_classes}), but given {ignore_index}"
+        )
 
     # Increase floating point precision and pass to CPU
     cm = cm.to(torch.double)
@@ -298,8 +300,7 @@ def mIoU(cm: ConfusionMatrix, ignore_index: Optional[int] = None) -> MetricsLamb
 
             0.24999...
     """
-    iou = IoU(cm=cm, ignore_index=ignore_index).mean()  # type: MetricsLambda
-    return iou
+    return IoU(cm=cm, ignore_index=ignore_index).mean()
 
 
 def cmAccuracy(cm: ConfusionMatrix) -> MetricsLambda:
@@ -313,8 +314,7 @@ def cmAccuracy(cm: ConfusionMatrix) -> MetricsLambda:
     """
     # Increase floating point precision and pass to CPU
     cm = cm.to(torch.double)
-    accuracy = cm.diag().sum() / (cm.sum() + 1e-15)  # type: MetricsLambda
-    return accuracy
+    return cm.diag().sum() / (cm.sum() + 1e-15)
 
 
 def cmPrecision(cm: ConfusionMatrix, average: bool = True) -> MetricsLambda:
@@ -393,11 +393,13 @@ def DiceCoefficient(cm: ConfusionMatrix, ignore_index: Optional[int] = None) -> 
     if not isinstance(cm, ConfusionMatrix):
         raise TypeError(f"Argument cm should be instance of ConfusionMatrix, but given {type(cm)}")
 
-    if ignore_index is not None:
-        if not (isinstance(ignore_index, numbers.Integral) and 0 <= ignore_index < cm.num_classes):
-            raise ValueError(
-                f"ignore_index should be integer and in the range of [0, {cm.num_classes}), but given {ignore_index}"
-            )
+    if ignore_index is not None and not (
+        isinstance(ignore_index, numbers.Integral)
+        and 0 <= ignore_index < cm.num_classes
+    ):
+        raise ValueError(
+            f"ignore_index should be integer and in the range of [0, {cm.num_classes}), but given {ignore_index}"
+        )
 
     # Increase floating point precision and pass to CPU
     cm = cm.to(torch.double)

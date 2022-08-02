@@ -450,7 +450,7 @@ def test_distrib_gloo_cpu_or_gpu(distributed_context_single_node_gloo):
 def test_distrib_hvd(gloo_hvd_executor):
 
     device = idist.device()
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_variable_accumulation, (device,), np=nproc, do_init=True)
     gloo_hvd_executor(_test_distrib_average, (device,), np=nproc, do_init=True)

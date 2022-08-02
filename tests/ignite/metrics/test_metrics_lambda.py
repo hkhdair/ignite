@@ -338,7 +338,7 @@ def test_state_metrics():
     d = data(y_pred, y)
     state = evaluator.run(d, max_epochs=1, epoch_length=y_pred.shape[0])
 
-    assert set(state.metrics.keys()) == set(["precision", "recall", "f1"])
+    assert set(state.metrics.keys()) == {"precision", "recall", "f1"}
 
 
 def test_state_metrics_ingredients_not_attached():
@@ -366,7 +366,7 @@ def test_state_metrics_ingredients_not_attached():
     d = data(y_pred, y)
     state = evaluator.run(d, max_epochs=1, epoch_length=y_pred.shape[0])
 
-    assert set(state.metrics.keys()) == set(["F1"])
+    assert set(state.metrics.keys()) == {"F1"}
 
 
 def test_recursive_attachment():
@@ -395,7 +395,7 @@ def test_recursive_attachment():
         d = data(y_pred, y)
         state = validator.run(d, max_epochs=1, epoch_length=y_pred.shape[0])
 
-        assert set(state.metrics.keys()) == set([metric_name])
+        assert set(state.metrics.keys()) == {metric_name}
         np_y_pred = y_pred.numpy().ravel()
         np_y = y.numpy().ravel()
         assert state.metrics[metric_name] == approx(compute_true_value_fn(np_y_pred, np_y))
@@ -540,8 +540,8 @@ def test_distrib_gloo_cpu_or_gpu(distributed_context_single_node_gloo):
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda")
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_integration, (device,), np=nproc, do_init=True)
     gloo_hvd_executor(_test_distrib_metrics_on_diff_devices, (device,), np=nproc, do_init=True)

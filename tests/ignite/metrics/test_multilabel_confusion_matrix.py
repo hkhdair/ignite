@@ -288,9 +288,15 @@ def test_simple_batched():
 
     for _ in range(num_iters):  # 2D tests
         mlcm = MultiLabelConfusionMatrix(num_classes, normalized=False)
-        targets = torch.randint(0, 2, size=(int(num_samples / batch_size), batch_size, num_classes))
-        predictions = torch.randint(0, 2, size=(int(num_samples / batch_size), batch_size, num_classes))
-        for i in range(int(num_samples / batch_size)):
+        targets = torch.randint(
+            0, 2, size=(num_samples // batch_size, batch_size, num_classes)
+        )
+
+        predictions = torch.randint(
+            0, 2, size=(num_samples // batch_size, batch_size, num_classes)
+        )
+
+        for i in range(num_samples // batch_size):
             target_sample = targets[i]
             prediction_sample = predictions[i]
             mlcm.update([prediction_sample, target_sample])
@@ -304,9 +310,19 @@ def test_simple_batched():
     size_3d = 4
     for _ in range(num_iters):  # 3D tests
         mlcm = MultiLabelConfusionMatrix(num_classes, normalized=False)
-        targets = torch.randint(0, 2, size=(int(num_samples / batch_size), batch_size, num_classes, size_3d))
-        predictions = torch.randint(0, 2, size=(int(num_samples / batch_size), batch_size, num_classes, size_3d))
-        for i in range(int(num_samples / batch_size)):
+        targets = torch.randint(
+            0,
+            2,
+            size=(num_samples // batch_size, batch_size, num_classes, size_3d),
+        )
+
+        predictions = torch.randint(
+            0,
+            2,
+            size=(num_samples // batch_size, batch_size, num_classes, size_3d),
+        )
+
+        for i in range(num_samples // batch_size):
             target_sample = targets[i]
             prediction_sample = predictions[i]
             mlcm.update([prediction_sample, target_sample])
@@ -320,11 +336,31 @@ def test_simple_batched():
     size_4d = 4
     for _ in range(num_iters):  # 4D tests
         mlcm = MultiLabelConfusionMatrix(num_classes, normalized=False)
-        targets = torch.randint(0, 2, size=(int(num_samples / batch_size), batch_size, num_classes, size_3d, size_4d))
-        predictions = torch.randint(
-            0, 2, size=(int(num_samples / batch_size), batch_size, num_classes, size_3d, size_4d)
+        targets = torch.randint(
+            0,
+            2,
+            size=(
+                num_samples // batch_size,
+                batch_size,
+                num_classes,
+                size_3d,
+                size_4d,
+            ),
         )
-        for i in range(int(num_samples / batch_size)):
+
+        predictions = torch.randint(
+            0,
+            2,
+            size=(
+                num_samples // batch_size,
+                batch_size,
+                num_classes,
+                size_3d,
+                size_4d,
+            ),
+        )
+
+        for i in range(num_samples // batch_size):
             target_sample = targets[i]
             prediction_sample = predictions[i]
             mlcm.update([prediction_sample, target_sample])
@@ -339,12 +375,32 @@ def test_simple_batched():
     for _ in range(num_iters):  # 5D tests
         mlcm = MultiLabelConfusionMatrix(num_classes, normalized=False)
         targets = torch.randint(
-            0, 2, size=(int(num_samples / batch_size), batch_size, num_classes, size_3d, size_4d, size_5d)
+            0,
+            2,
+            size=(
+                num_samples // batch_size,
+                batch_size,
+                num_classes,
+                size_3d,
+                size_4d,
+                size_5d,
+            ),
         )
+
         predictions = torch.randint(
-            0, 2, size=(int(num_samples / batch_size), batch_size, num_classes, size_3d, size_4d, size_5d)
+            0,
+            2,
+            size=(
+                num_samples // batch_size,
+                batch_size,
+                num_classes,
+                size_3d,
+                size_4d,
+                size_5d,
+            ),
         )
-        for i in range(int(num_samples / batch_size)):
+
+        for i in range(num_samples // batch_size):
             target_sample = targets[i]
             prediction_sample = predictions[i]
             mlcm.update([prediction_sample, target_sample])

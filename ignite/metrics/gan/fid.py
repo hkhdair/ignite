@@ -37,13 +37,18 @@ def fid_score(
     if np.iscomplexobj(covmean):
         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
             m = np.max(np.abs(covmean.imag))
-            raise ValueError("Imaginary component {}".format(m))
+            raise ValueError(f"Imaginary component {m}")
         covmean = covmean.real
 
     tr_covmean = np.trace(covmean)
 
     if not np.isfinite(covmean).all():
-        tr_covmean = np.sum(np.sqrt(((np.diag(sigma1) * eps) * (np.diag(sigma2) * eps)) / (eps * eps)))
+        tr_covmean = np.sum(
+            np.sqrt(
+                (np.diag(sigma1) * eps) * (np.diag(sigma2) * eps) / eps**2
+            )
+        )
+
 
     return float(diff.dot(diff).item() + torch.trace(sigma1) + torch.trace(sigma2) - 2 * tr_covmean)
 

@@ -53,7 +53,7 @@ def test_multiclass_wrong_inputs():
         ConfusionMatrix.normalize(None, None)
 
 
-@pytest.fixture(params=[item for item in range(10)])
+@pytest.fixture(params=list(range(10)))
 def test_data(request):
     return [
         # Multiclass input data of shape (N, )
@@ -602,8 +602,8 @@ def test_distrib_gloo_cpu_or_gpu(distributed_context_single_node_gloo):
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda")
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_multiclass_images, (device,), np=nproc, do_init=True)
     gloo_hvd_executor(_test_distrib_accumulator_device, (device,), np=nproc, do_init=True)

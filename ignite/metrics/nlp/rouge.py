@@ -99,9 +99,9 @@ class MultiRefAverageReducer(MultiRefReducer):
     """
 
     def __call__(self, scores: Sequence[Score]) -> Score:
-        match = sum([score.match for score in scores])
-        candidate = sum([score.candidate for score in scores])
-        reference = sum([score.reference for score in scores])
+        match = sum(score.match for score in scores)
+        candidate = sum(score.candidate for score in scores)
+        reference = sum(score.reference for score in scores)
         return Score(match=match, candidate=candidate, reference=reference)
 
 
@@ -415,5 +415,5 @@ class Rouge(Metric):
     def compute(self) -> Mapping:
         results = {}
         for m in self.internal_metrics:
-            results.update(m.compute())
+            results |= m.compute()
         return results

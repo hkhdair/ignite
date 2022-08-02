@@ -140,7 +140,7 @@ def Fbeta(
 
             0.7499...
     """
-    if not (beta > 0):
+    if beta <= 0:
         raise ValueError(f"Beta should be a positive integer, but given {beta}")
 
     if precision is not None and output_transform is not None:

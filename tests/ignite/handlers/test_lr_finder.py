@@ -55,20 +55,17 @@ class DummyModelMulipleParamGroups(nn.Module):
 
 @pytest.fixture
 def model():
-    model = DummyModel(out_channels=10)
-    yield model
+    yield DummyModel(out_channels=10)
 
 
 @pytest.fixture
 def model_multiple_param_groups():
-    model_multiple_param_groups = DummyModelMulipleParamGroups()
-    yield model_multiple_param_groups
+    yield DummyModelMulipleParamGroups()
 
 
 @pytest.fixture
 def mnist_model():
-    model = DummyModel(n_channels=784, out_channels=10, flatten_input=True)
-    yield model
+    yield DummyModel(n_channels=784, out_channels=10, flatten_input=True)
 
 
 @pytest.fixture
@@ -78,14 +75,22 @@ def optimizer(model):
 
 @pytest.fixture
 def optimizer_multiple_param_groups(model_multiple_param_groups):
-    optimizer_multiple_param_groups = SGD(
+    yield SGD(
         [
-            {"params": model_multiple_param_groups.fc1.parameters(), "lr": 4e-1},
-            {"params": model_multiple_param_groups.fc2.parameters(), "lr": 3e-2},
-            {"params": model_multiple_param_groups.fc3.parameters(), "lr": 3e-3},
+            {
+                "params": model_multiple_param_groups.fc1.parameters(),
+                "lr": 4e-1,
+            },
+            {
+                "params": model_multiple_param_groups.fc2.parameters(),
+                "lr": 3e-2,
+            },
+            {
+                "params": model_multiple_param_groups.fc3.parameters(),
+                "lr": 3e-3,
+            },
         ]
     )
-    yield optimizer_multiple_param_groups
 
 
 @pytest.fixture
@@ -115,22 +120,23 @@ def lr_finder():
 
 @pytest.fixture
 def dummy_engine(model, optimizer):
-    engine = create_supervised_trainer(model, optimizer, nn.MSELoss())
-    yield engine
+    yield create_supervised_trainer(model, optimizer, nn.MSELoss())
 
 
 @pytest.fixture
 def dummy_engine_mnist(mnist_model, mnist_optimizer):
-    mnist_engine = create_supervised_trainer(mnist_model, mnist_optimizer, nn.CrossEntropyLoss())
-    yield mnist_engine
+    yield create_supervised_trainer(
+        mnist_model, mnist_optimizer, nn.CrossEntropyLoss()
+    )
 
 
 @pytest.fixture
 def dummy_engine_mulitple_param_groups(model_multiple_param_groups, optimizer_multiple_param_groups):
-    engine_multiple_param_groups = create_supervised_trainer(
-        model_multiple_param_groups, optimizer_multiple_param_groups, nn.MSELoss()
+    yield create_supervised_trainer(
+        model_multiple_param_groups,
+        optimizer_multiple_param_groups,
+        nn.MSELoss(),
     )
-    yield engine_multiple_param_groups
 
 
 @pytest.fixture
@@ -151,11 +157,13 @@ def mnist_dataloader():
 
     data_transform = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
 
-    train_loader = DataLoader(
-        MNIST(download=True, root="/tmp", transform=data_transform, train=True), batch_size=256, shuffle=True
+    yield DataLoader(
+        MNIST(
+            download=True, root="/tmp", transform=data_transform, train=True
+        ),
+        batch_size=256,
+        shuffle=True,
     )
-
-    yield train_loader
 
 
 def test_attach_incorrect_input_args(lr_finder, dummy_engine, model, optimizer, dataloader):
@@ -212,7 +220,11 @@ def test_attach_without_with(lr_finder, dummy_engine, to_save):
         assert len(dummy_engine._event_handlers[event]) == 0
 
     with lr_finder.attach(dummy_engine, to_save=to_save) as _:
-        assert any([len(dummy_engine._event_handlers[event]) != 0 for event in dummy_engine._event_handlers])
+        assert any(
+            len(dummy_engine._event_handlers[event]) != 0
+            for event in dummy_engine._event_handlers
+        )
+
 
         with pytest.raises(
             RuntimeError, match=r"learning rate finder didn't run yet so lr_suggestion can't be returned"
@@ -266,13 +278,13 @@ def test_lr_policy(lr_finder, to_save, dummy_engine, dataloader):
         trainer_with_finder.run(dataloader)
 
     lr = lr_finder.get_results()["lr"]
-    assert all([lr[i - 1] < lr[i] for i in range(1, len(lr))])
+    assert all(lr[i - 1] < lr[i] for i in range(1, len(lr)))
 
     with lr_finder.attach(dummy_engine, to_save=to_save, step_mode="exp") as trainer_with_finder:
         trainer_with_finder.run(dataloader)
 
     lr = lr_finder.get_results()["lr"]
-    assert all([lr[i - 1] < lr[i] for i in range(1, len(lr))])
+    assert all(lr[i - 1] < lr[i] for i in range(1, len(lr)))
 
 
 def assert_output_sizes(lr_finder, dummy_engine):
@@ -295,12 +307,12 @@ def test_num_iter_is_enough(lr_finder, to_save, dummy_engine, dataloader):
 
     with pytest.warns(UserWarning, match=r"Run completed without loss diverging"):
         with lr_finder.attach(
-            dummy_engine, to_save=to_save, num_iter=50, diverge_th=float("inf")
-        ) as trainer_with_finder:
+                    dummy_engine, to_save=to_save, num_iter=50, diverge_th=float("inf")
+                ) as trainer_with_finder:
             trainer_with_finder.run(dataloader)
             assert_output_sizes(lr_finder, dummy_engine)
             # -1 because it terminates when state.iteration > num_iter
-            assert dummy_engine.state.iteration - 1 == 50
+            assert dummy_engine.state.iteration == 51
 
 
 def test_num_iter_is_not_enough(lr_finder, to_save, dummy_engine, dataloader):

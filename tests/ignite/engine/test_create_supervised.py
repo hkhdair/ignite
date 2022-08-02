@@ -85,7 +85,7 @@ def _test_create_supervised_trainer(
 
     x = torch.tensor([[0.01], [0.02], [0.03], [0.04], [0.05]])
     y = torch.tensor([[0.015], [0.025], [0.035], [0.045], [0.055]])
-    data = [(_x, _y) for _x, _y in zip(x, y)]
+    data = list(zip(x, y))
 
     theta = [0.0]
     accumulation = [0.0]
@@ -234,11 +234,10 @@ def _test_create_supervised_evaluator(
         assert model.weight.data[0, 0].item() == approx(0.0)
         assert model.bias.item() == approx(0.0)
 
-    else:
-        if Version(torch.__version__) >= Version("1.7.0"):
-            # This is broken in 1.6.0 but will be probably fixed with 1.7.0
-            with pytest.raises(RuntimeError, match=r"Expected all tensors to be on the same device"):
-                evaluator.run(data)
+    elif Version(torch.__version__) >= Version("1.7.0"):
+        # This is broken in 1.6.0 but will be probably fixed with 1.7.0
+        with pytest.raises(RuntimeError, match=r"Expected all tensors to be on the same device"):
+            evaluator.run(data)
 
 
 def _test_mocked_supervised_evaluator(

@@ -11,7 +11,7 @@ except ImportError:
 def _getvocpallete(num_cls):
     n = num_cls
     pallete = [0] * (n * 3)
-    for j in range(0, n):
+    for j in range(n):
         lab = j
         pallete[j * 3 + 0] = 0
         pallete[j * 3 + 1] = 0

@@ -280,7 +280,10 @@ def _test_distrib_on_output(device):
     @trainer.on(Events.ITERATION_COMPLETED)
     def running_avg_output_update(engine):
         i = engine.state.iteration - 1
-        o = sum([all_loss_values[i + j * k] for j in range(idist.get_world_size())]).item()
+        o = sum(
+            all_loss_values[i + j * k] for j in range(idist.get_world_size())
+        ).item()
+
         o /= idist.get_world_size()
         if engine.state.running_avg_output is None:
             engine.state.running_avg_output = o
@@ -415,8 +418,8 @@ def test_distrib_gloo_cpu_or_gpu(distributed_context_single_node_gloo):
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda")
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_on_output, (device,), np=nproc, do_init=True)
     gloo_hvd_executor(_test_distrib_on_metric, (device,), np=nproc, do_init=True)

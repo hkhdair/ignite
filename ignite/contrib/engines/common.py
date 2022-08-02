@@ -295,13 +295,15 @@ def _setup_logging(
     evaluators: Optional[Union[Engine, Dict[str, Engine]]],
     log_every_iters: int,
 ) -> None:
-    if optimizers is not None:
-        if not isinstance(optimizers, (Optimizer, Mapping)):
-            raise TypeError("Argument optimizers should be either a single optimizer or a dictionary or optimizers")
+    if optimizers is not None and not isinstance(
+        optimizers, (Optimizer, Mapping)
+    ):
+        raise TypeError("Argument optimizers should be either a single optimizer or a dictionary or optimizers")
 
-    if evaluators is not None:
-        if not isinstance(evaluators, (Engine, Mapping)):
-            raise TypeError("Argument evaluators should be either a single engine or a dictionary or engines")
+    if evaluators is not None and not isinstance(
+        evaluators, (Engine, Mapping)
+    ):
+        raise TypeError("Argument evaluators should be either a single engine or a dictionary or engines")
 
     if log_every_iters is None:
         log_every_iters = 1
@@ -606,11 +608,7 @@ def gen_save_best_models_by_val_score(
     if trainer is not None:
         global_step_transform = global_step_from_engine(trainer)
 
-    if isinstance(models, nn.Module):
-        to_save = {"model": models}  # type: Dict[str, nn.Module]
-    else:
-        to_save = models
-
+    to_save = {"model": models} if isinstance(models, nn.Module) else models
     best_model_handler = Checkpoint(
         to_save,
         save_handler,

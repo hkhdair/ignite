@@ -360,13 +360,34 @@ def test_weights_scalar_handler(dummy_model_factory):
         assert mock_logger.clearml_logger.report_scalar.call_count == 4
         mock_logger.clearml_logger.report_scalar.assert_has_calls(
             [
-                call(title=tag_prefix + "weights_norm/fc1", series="weight", iteration=5, value=0.0),
-                call(title=tag_prefix + "weights_norm/fc1", series="bias", iteration=5, value=0.0),
-                call(title=tag_prefix + "weights_norm/fc2", series="weight", iteration=5, value=12.0),
-                call(title=tag_prefix + "weights_norm/fc2", series="bias", iteration=5, value=math.sqrt(12.0)),
+                call(
+                    title=f"{tag_prefix}weights_norm/fc1",
+                    series="weight",
+                    iteration=5,
+                    value=0.0,
+                ),
+                call(
+                    title=f"{tag_prefix}weights_norm/fc1",
+                    series="bias",
+                    iteration=5,
+                    value=0.0,
+                ),
+                call(
+                    title=f"{tag_prefix}weights_norm/fc2",
+                    series="weight",
+                    iteration=5,
+                    value=12.0,
+                ),
+                call(
+                    title=f"{tag_prefix}weights_norm/fc2",
+                    series="bias",
+                    iteration=5,
+                    value=math.sqrt(12.0),
+                ),
             ],
             any_order=True,
         )
+
 
     _test()
     _test(tag="tag")
@@ -449,13 +470,34 @@ def test_weights_hist_handler(dummy_model_factory):
         assert mock_logger.grad_helper.add_histogram.call_count == 4
         mock_logger.grad_helper.add_histogram.assert_has_calls(
             [
-                call(title=tag_prefix + "weights_fc1", hist_data=ANY, series="weight", step=5),
-                call(title=tag_prefix + "weights_fc1", hist_data=ANY, series="bias", step=5),
-                call(title=tag_prefix + "weights_fc2", hist_data=ANY, series="weight", step=5),
-                call(title=tag_prefix + "weights_fc2", hist_data=ANY, series="bias", step=5),
+                call(
+                    title=f"{tag_prefix}weights_fc1",
+                    hist_data=ANY,
+                    series="weight",
+                    step=5,
+                ),
+                call(
+                    title=f"{tag_prefix}weights_fc1",
+                    hist_data=ANY,
+                    series="bias",
+                    step=5,
+                ),
+                call(
+                    title=f"{tag_prefix}weights_fc2",
+                    hist_data=ANY,
+                    series="weight",
+                    step=5,
+                ),
+                call(
+                    title=f"{tag_prefix}weights_fc2",
+                    hist_data=ANY,
+                    series="bias",
+                    step=5,
+                ),
             ],
             any_order=True,
         )
+
 
     _test()
     _test(tag="tag")
@@ -538,16 +580,33 @@ def test_grads_scalar_handler(dummy_model_factory, norm_mock):
         mock_logger.clearml_logger.report_scalar.assert_has_calls(
             [
                 call(
-                    title=tag_prefix + "grads_norm/fc1", value=ANY, series="weight", iteration=mock_engine.state.epoch
+                    title=f"{tag_prefix}grads_norm/fc1",
+                    value=ANY,
+                    series="weight",
+                    iteration=mock_engine.state.epoch,
                 ),
-                call(title=tag_prefix + "grads_norm/fc1", value=ANY, series="bias", iteration=mock_engine.state.epoch),
                 call(
-                    title=tag_prefix + "grads_norm/fc2", value=ANY, series="weight", iteration=mock_engine.state.epoch
+                    title=f"{tag_prefix}grads_norm/fc1",
+                    value=ANY,
+                    series="bias",
+                    iteration=mock_engine.state.epoch,
                 ),
-                call(title=tag_prefix + "grads_norm/fc2", value=ANY, series="bias", iteration=mock_engine.state.epoch),
+                call(
+                    title=f"{tag_prefix}grads_norm/fc2",
+                    value=ANY,
+                    series="weight",
+                    iteration=mock_engine.state.epoch,
+                ),
+                call(
+                    title=f"{tag_prefix}grads_norm/fc2",
+                    value=ANY,
+                    series="bias",
+                    iteration=mock_engine.state.epoch,
+                ),
             ],
             any_order=True,
         )
+
         assert mock_logger.clearml_logger.report_scalar.call_count == 4
         assert norm_mock.call_count == 4
 
@@ -631,13 +690,34 @@ def test_grads_hist_handler(dummy_model_factory):
         assert mock_logger.grad_helper.add_histogram.call_count == 4
         mock_logger.grad_helper.add_histogram.assert_has_calls(
             [
-                call(title=tag_prefix + "grads_fc1", hist_data=ANY, series="weight", step=5),
-                call(title=tag_prefix + "grads_fc1", hist_data=ANY, series="bias", step=5),
-                call(title=tag_prefix + "grads_fc2", hist_data=ANY, series="weight", step=5),
-                call(title=tag_prefix + "grads_fc2", hist_data=ANY, series="bias", step=5),
+                call(
+                    title=f"{tag_prefix}grads_fc1",
+                    hist_data=ANY,
+                    series="weight",
+                    step=5,
+                ),
+                call(
+                    title=f"{tag_prefix}grads_fc1",
+                    hist_data=ANY,
+                    series="bias",
+                    step=5,
+                ),
+                call(
+                    title=f"{tag_prefix}grads_fc2",
+                    hist_data=ANY,
+                    series="weight",
+                    step=5,
+                ),
+                call(
+                    title=f"{tag_prefix}grads_fc2",
+                    hist_data=ANY,
+                    series="bias",
+                    step=5,
+                ),
             ],
             any_order=True,
         )
+
 
     _test()
     _test(tag="tag")

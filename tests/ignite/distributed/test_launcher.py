@@ -140,7 +140,7 @@ def _test_check_idist_parallel_hvdrun(fp, backend, nprocs):
 @pytest.mark.skipif(not has_hvd_support, reason="Skip if no Horovod dist support")
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip because test uses horovodrun")
 def test_check_idist_parallel_hvdrun_launch_n_procs(exec_filepath):
-    np = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    np = torch.cuda.device_count() if torch.cuda.is_available() else 4
     _test_check_idist_parallel_hvdrun(exec_filepath, "horovod", np)
 
 
@@ -161,7 +161,7 @@ def _test_check_idist_parallel_spawn(fp, backend, nprocs):
 @pytest.mark.skipif(not has_native_dist_support, reason="Skip if no native dist support")
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_check_idist_parallel_spawn_n_procs_gloo(exec_filepath):
-    np = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    np = torch.cuda.device_count() if torch.cuda.is_available() else 4
     _test_check_idist_parallel_spawn(exec_filepath, "gloo", np)
 
 
@@ -169,9 +169,11 @@ def test_check_idist_parallel_spawn_n_procs_gloo(exec_filepath):
 @pytest.mark.skipif(not has_native_dist_support, reason="Skip if no native dist support")
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_smoke_test_check_idist_parallel_spawn_multinode_n_procs_gloo(exec_filepath):
-    # Just a smoke test from check_idist_parallel.py for an emulated multi-node configuration
-    cmd1 = "export CUDA_VISIBLE_DEVICES= && "
-    cmd1 += 'bash -c "python tests/ignite/distributed/check_idist_parallel.py --backend=gloo --nproc_per_node=2 '
+    cmd1 = (
+        "export CUDA_VISIBLE_DEVICES= && "
+        + 'bash -c "python tests/ignite/distributed/check_idist_parallel.py --backend=gloo --nproc_per_node=2 '
+    )
+
     cmd1 += '--nnodes=2 --node_rank=0 --master_addr=localhost --master_port=3344 &"'
     os.system(cmd1)
 
@@ -218,7 +220,7 @@ def test_check_idist_parallel_spawn_n_procs_xla(exec_filepath):
 @pytest.mark.skipif(not has_hvd_support, reason="Skip if no Horovod dist support")
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_check_idist_parallel_spawn_n_procs_hvd(exec_filepath):
-    np = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    np = torch.cuda.device_count() if torch.cuda.is_available() else 4
     _test_check_idist_parallel_spawn(exec_filepath, "horovod", np)
 
 

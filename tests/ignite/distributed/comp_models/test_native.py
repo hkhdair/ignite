@@ -491,10 +491,11 @@ def _test_dist_spawn_fn(local_rank, backend, world_size, device, **kwargs):
 
 
 def _test__native_dist_model_spawn(backend, num_workers_per_machine, device, init_method=None, **spawn_kwargs):
-    kwargs_dict = {}
-    for key in ["master_addr", "master_port"]:
-        if key in spawn_kwargs:
-            kwargs_dict[key] = spawn_kwargs[key]
+    kwargs_dict = {
+        key: spawn_kwargs[key]
+        for key in ["master_addr", "master_port"]
+        if key in spawn_kwargs
+    }
 
     _NativeDistModel.spawn(
         _test_dist_spawn_fn,

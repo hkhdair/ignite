@@ -383,7 +383,12 @@ def test_checkpoint_with_int_score():
         checkpointer(trainer)
         assert save_handler.call_count == 1
 
-        metadata = {"basename": name, "score_name": score_name[:-1] if len(score_name) > 0 else None, "priority": 1}
+        metadata = {
+            "basename": name,
+            "score_name": score_name[:-1] if score_name != "" else None,
+            "priority": 1,
+        }
+
         save_handler.assert_called_with(obj, f"{name}_{score_name}1.pt", metadata)
 
         trainer.state.epoch = 12
@@ -585,7 +590,7 @@ def test_model_checkpoint_simple_recovery(dirname):
 @pytest.mark.parametrize("ext, require_empty", [(".txt", True), (".pt", False)])
 def test_model_checkpoint_simple_recovery_from_existing_non_empty(ext, require_empty, dirname):
 
-    previous_fname = dirname / f"{_PREFIX}_obj_{1}{ext}"
+    previous_fname = dirname / f"{_PREFIX}_obj_1{ext}"
     with open(previous_fname, "w") as f:
         f.write("test")
 
@@ -599,7 +604,7 @@ def test_model_checkpoint_simple_recovery_from_existing_non_empty(ext, require_e
     fname = h.last_checkpoint
     ext = ".pt"
     assert isinstance(fname, Path)
-    assert dirname / f"{_PREFIX}_model_{1}{ext}" == fname
+    assert dirname / f"{_PREFIX}_model_1{ext}" == fname
     assert fname.exists()
     assert previous_fname.exists()
     loaded_objects = torch.load(fname)
@@ -1196,7 +1201,7 @@ def test_disksaver_wrong_input(dirname):
         DiskSaver("/tmp/non-existing-folder", create_dir=False)
 
     def _test(ext):
-        previous_fname = dirname / f"{_PREFIX}_obj_{1}{ext}"
+        previous_fname = dirname / f"{_PREFIX}_obj_1{ext}"
         with open(previous_fname, "w") as f:
             f.write("test")
 
@@ -1273,8 +1278,8 @@ def test_distrib_nccl_gpu(distributed_context_single_node_nccl, get_rank_zero_di
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor, get_rank_zero_dirname):
 
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda")
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
     dirname = get_rank_zero_dirname()
 
     gloo_hvd_executor(

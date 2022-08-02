@@ -455,9 +455,7 @@ def set_local_rank(index: int) -> None:
 def _set_model(model: Any, temporary: bool = False) -> None:
     global _model, _need_to_sync
     _model = model
-    _need_to_sync = True
-    if not isinstance(_model, _SerialModel) and not temporary:
-        _need_to_sync = False
+    _need_to_sync = isinstance(_model, _SerialModel) or temporary
 
 
 def _assert_backend(backend: str) -> None:
