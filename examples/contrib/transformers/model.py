@@ -17,6 +17,4 @@ class TransformerModel(nn.Module):
         )
 
     def forward(self, inputs):
-        output = self.transformer(**inputs)["logits"]
-
-        return output
+        return self.transformer(**inputs)["logits"]

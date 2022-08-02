@@ -8,13 +8,13 @@ from ignite.handlers import DiskSaver
 
 
 def get_tokenizer(tokenizer_name, tokenizer_dir):
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, cache_dir=tokenizer_dir, do_lower_case=True)
-    return tokenizer
+    return AutoTokenizer.from_pretrained(
+        tokenizer_name, cache_dir=tokenizer_dir, do_lower_case=True
+    )
 
 
 def get_model(model_name, model_dir, drop_out, n_fc, num_classes):
-    model = TransformerModel(model_name, model_dir, drop_out, n_fc, num_classes)
-    return model
+    return TransformerModel(model_name, model_dir, drop_out, n_fc, num_classes)
 
 
 def get_dataset(cache_dir, tokenizer_name, tokenizer_dir, max_length):

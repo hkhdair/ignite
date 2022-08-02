@@ -310,13 +310,18 @@ def test_weights_scalar_handler(dummy_model_factory):
         assert mock_logger.log_metric.call_count == 4
         mock_logger.log_metric.assert_has_calls(
             [
-                call(tag_prefix + "weights_norm/fc1/weight", y=0.0, x=5),
-                call(tag_prefix + "weights_norm/fc1/bias", y=0.0, x=5),
-                call(tag_prefix + "weights_norm/fc2/weight", y=12.0, x=5),
-                call(tag_prefix + "weights_norm/fc2/bias", y=math.sqrt(12.0), x=5),
+                call(f"{tag_prefix}weights_norm/fc1/weight", y=0.0, x=5),
+                call(f"{tag_prefix}weights_norm/fc1/bias", y=0.0, x=5),
+                call(f"{tag_prefix}weights_norm/fc2/weight", y=12.0, x=5),
+                call(
+                    f"{tag_prefix}weights_norm/fc2/bias",
+                    y=math.sqrt(12.0),
+                    x=5,
+                ),
             ],
             any_order=True,
         )
+
 
     _test()
     _test(tag="tag")
@@ -382,13 +387,14 @@ def test_grads_scalar_handler(dummy_model_factory, norm_mock):
 
         mock_logger.log_metric.assert_has_calls(
             [
-                call(tag_prefix + "grads_norm/fc1/weight", y=ANY, x=5),
-                call(tag_prefix + "grads_norm/fc1/bias", y=ANY, x=5),
-                call(tag_prefix + "grads_norm/fc2/weight", y=ANY, x=5),
-                call(tag_prefix + "grads_norm/fc2/bias", y=ANY, x=5),
+                call(f"{tag_prefix}grads_norm/fc1/weight", y=ANY, x=5),
+                call(f"{tag_prefix}grads_norm/fc1/bias", y=ANY, x=5),
+                call(f"{tag_prefix}grads_norm/fc2/weight", y=ANY, x=5),
+                call(f"{tag_prefix}grads_norm/fc2/bias", y=ANY, x=5),
             ],
             any_order=True,
         )
+
         assert mock_logger.log_metric.call_count == 4
         assert norm_mock.call_count == 4
 
@@ -534,10 +540,10 @@ def test_neptune_saver_non_serializable():
 @pytest.fixture
 def no_site_packages():
 
-    neptune_client_modules = {}
-    for k in sys.modules:
-        if "neptune" in k:
-            neptune_client_modules[k] = sys.modules[k]
+    neptune_client_modules = {
+        k: sys.modules[k] for k in sys.modules if "neptune" in k
+    }
+
     for k in neptune_client_modules:
         del sys.modules[k]
 

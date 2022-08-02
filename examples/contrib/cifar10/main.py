@@ -196,7 +196,7 @@ def run(
 
     # catch all local parameters
     config = locals()
-    config.update(config["spawn_kwargs"])
+    config |= config["spawn_kwargs"]
     del config["spawn_kwargs"]
 
     spawn_kwargs["nproc_per_node"] = nproc_per_node

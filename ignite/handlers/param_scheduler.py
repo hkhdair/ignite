@@ -200,7 +200,7 @@ class ParamScheduler(BaseParamScheduler):
             for i, param_group in enumerate(self.optimizer_param_groups):
                 param_group[self.param_name] = value[i]
         else:
-            for i, param_group in enumerate(self.optimizer_param_groups):
+            for param_group in self.optimizer_param_groups:
                 param_group[self.param_name] = value
 
         if name is None:
@@ -303,7 +303,7 @@ class CyclicalScheduler(ParamScheduler):
         )
         self.start_value = start_value
         self.end_value = end_value
-        self.cycle_size = int(cycle_size)  # Ensure cycle_size is integer
+        self.cycle_size = cycle_size
         self.cycle_mult = cycle_mult
         self.cycle = 0
         self.start_value_mult = start_value_mult
@@ -601,7 +601,7 @@ class ConcatScheduler(ParamScheduler):
         if not isinstance(durations, (list, tuple)):
             raise TypeError(f"Argument durations should be list/tuple, but given {durations}")
 
-        if not all([isinstance(t, numbers.Integral) for t in durations]):
+        if not all(isinstance(t, numbers.Integral) for t in durations):
             raise ValueError(f"Argument durations should be list/tuple of integers, but given {durations}")
 
         if len(schedulers) != len(durations) + 1:
@@ -875,10 +875,7 @@ class LRScheduler(ParamScheduler):
         self.lr_scheduler._get_lr_called_within_step = True  # type: ignore[attr-defined]
         lr_list = cast(List[float], self.lr_scheduler.get_lr())
         self.lr_scheduler._get_lr_called_within_step = False  # type: ignore[attr-defined]
-        if len(lr_list) == 1:
-            return lr_list[0]
-        else:
-            return lr_list
+        return lr_list[0] if len(lr_list) == 1 else lr_list
 
     @classmethod
     def simulate_values(  # type: ignore[override]
@@ -1005,7 +1002,7 @@ def create_lr_scheduler_with_warmup(
     if not isinstance(warmup_duration, numbers.Integral):
         raise TypeError(f"Argument warmup_duration should be integer, but given {warmup_duration}")
 
-    if not (warmup_duration > 1):
+    if warmup_duration <= 1:
         raise ValueError(f"Argument warmup_duration should be at least 2 events, but given {warmup_duration}")
 
     warmup_schedulers = []  # type: List[ParamScheduler]
@@ -1191,7 +1188,7 @@ class PiecewiseLinear(ParamScheduler):
             raise TypeError(
                 f"Argument milestones_values should be a list or tuple, but given {type(milestones_values)}"
             )
-        if len(milestones_values) < 1:
+        if not milestones_values:
             raise ValueError(
                 f"Argument milestones_values should be with at least one value, but given {milestones_values}"
             )
@@ -1203,7 +1200,7 @@ class PiecewiseLinear(ParamScheduler):
                 raise ValueError("Argument milestones_values should be a list of pairs (milestone, param_value)")
             if not isinstance(pair[0], numbers.Integral):
                 raise TypeError(f"Value of a milestone should be integer, but given {type(pair[0])}")
-            if len(milestones) > 0 and pair[0] < milestones[-1]:
+            if milestones and pair[0] < milestones[-1]:
                 raise ValueError(
                     f"Milestones should be increasing integers, but given {pair[0]} is smaller "
                     f"than the previous milestone {milestones[-1]}"
@@ -1349,9 +1346,10 @@ class ParamGroupScheduler:
                 a dictionary containing a whole state of ParamGroupScheduler
         """
         state_dict = OrderedDict()  # type: Dict[str, List[Any]]
-        state_dict["schedulers"] = []
-        for n, s in zip(self.names, self.schedulers):
-            state_dict["schedulers"].append((n, s.state_dict()))
+        state_dict["schedulers"] = [
+            (n, s.state_dict()) for n, s in zip(self.names, self.schedulers)
+        ]
+
         return state_dict
 
     def load_state_dict(self, state_dict: Mapping) -> None:
@@ -1365,8 +1363,9 @@ class ParamGroupScheduler:
 
         if "schedulers" not in state_dict:
             raise ValueError(
-                f"Required state attribute '{'schedulers'}' is absent in provided state_dict '{state_dict.keys()}'"
+                f"Required state attribute 'schedulers' is absent in provided state_dict '{state_dict.keys()}'"
             )
+
         sds = state_dict["schedulers"]
         if len(sds) != len(self.schedulers):
             raise ValueError(

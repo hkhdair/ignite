@@ -122,7 +122,7 @@ class Engine(Serializable):
 
     def __init__(self, process_function: Callable[["Engine", Any], Any]):
         self._event_handlers = defaultdict(list)  # type: Dict[Any, List]
-        self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
+        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self._process_function = process_function
         self.last_event_name = None  # type: Optional[Events]
         self.should_terminate = False
@@ -330,12 +330,12 @@ class Engine(Serializable):
             event_name: The event the handler attached to. Set this
                 to ``None`` to search all events.
         """
-        if event_name is not None:
-            if event_name not in self._event_handlers:
-                return False
-            events = [event_name]  # type: Union[List[Any], Dict[Any, List]]
-        else:
+        if event_name is None:
             events = self._event_handlers
+        elif event_name not in self._event_handlers:
+            return False
+        else:
+            events = [event_name]  # type: Union[List[Any], Dict[Any, List]]
         for e in events:
             for h, _, _ in self._event_handlers[e]:
                 if self._compare_handlers(handler, h):
@@ -671,12 +671,14 @@ class Engine(Serializable):
                         "before calling engine.run() in order to restart the training from the beginning."
                     )
                 self.state.max_epochs = max_epochs
-            if epoch_length is not None:
-                if epoch_length != self.state.epoch_length:
-                    raise ValueError(
-                        "Argument epoch_length should be same as in the state, "
-                        f"but given {epoch_length} vs {self.state.epoch_length}"
-                    )
+            if (
+                epoch_length is not None
+                and epoch_length != self.state.epoch_length
+            ):
+                raise ValueError(
+                    "Argument epoch_length should be same as in the state, "
+                    f"but given {epoch_length} vs {self.state.epoch_length}"
+                )
 
         if self.state.max_epochs is None or self._is_done(self.state):
             # Create new state

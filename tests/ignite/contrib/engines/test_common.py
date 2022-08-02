@@ -112,7 +112,7 @@ def _test_setup_common_training_handlers(
     for cls in [
         TerminateOnNan,
     ]:
-        assert any([isinstance(h[0], cls) for h in handlers]), f"{handlers}"
+        assert any(isinstance(h[0], cls) for h in handlers), f"{handlers}"
     assert "batch_loss" in trainer.state.metrics
 
     # Check saved checkpoint
@@ -124,7 +124,7 @@ def _test_setup_common_training_handlers(
         for v in [
             "training_checkpoint",
         ]:
-            assert any([v in c for c in checkpoints])
+            assert any(v in c for c in checkpoints)
 
     # Check LR scheduling
     assert optimizer.param_groups[0]["lr"] <= lr * gamma ** (
@@ -374,21 +374,21 @@ def _test_setup_logging(
     for cls in [
         output_handler_cls,
     ]:
-        assert any([isinstance(h[0], cls) for h in handlers]), f"{handlers}"
+        assert any(isinstance(h[0], cls) for h in handlers), f"{handlers}"
 
     if with_optim:
         handlers = trainer._event_handlers[Events.ITERATION_STARTED]
         for cls in [
             opt_params_handler_cls,
         ]:
-            assert any([isinstance(h[0], cls) for h in handlers]), f"{handlers}"
+            assert any(isinstance(h[0], cls) for h in handlers), f"{handlers}"
 
     if with_eval:
         handlers = evaluator._event_handlers[Events.COMPLETED]
         for cls in [
             output_handler_cls,
         ]:
-            assert any([isinstance(h[0], cls) for h in handlers]), f"{handlers}"
+            assert any(isinstance(h[0], cls) for h in handlers), f"{handlers}"
 
     data = [0, 1, 2]
     trainer.run(data, max_epochs=10)
@@ -399,7 +399,7 @@ def _test_setup_logging(
         for v in [
             "events",
         ]:
-            assert any([v in c for c in tb_files]), f"{tb_files}"
+            assert any(v in c for c in tb_files), f"{tb_files}"
 
     return x_logger
 

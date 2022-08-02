@@ -307,17 +307,18 @@ class AutolistAutosummary(Autosummary):
                     names = [
                         name for name in names if (isclass(getattr(module, name)) or isfunction(getattr(module, name)))
                     ]
-                else:
-                    if auto == "autolist-classes":
-                        # Get only classes
-                        check = isclass
-                    elif auto == "autolist-functions":
-                        # Get only functions
-                        check = isfunction
-                    else:
-                        raise NotImplementedError
-
+                elif auto == "autolist-classes":
+                    # Get only classes
+                    check = isclass
                     names = [name for name in names if check(getattr(module, name))]
+
+                elif auto == "autolist-functions":
+                    # Get only functions
+                    check = isfunction
+                    names = [name for name in names if check(getattr(module, name))]
+
+                else:
+                    raise NotImplementedError
 
                 # Update content
                 self.content = StringList(names)

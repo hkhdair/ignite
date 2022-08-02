@@ -67,7 +67,10 @@ class VariableAccumulation(Metric):
 
         if isinstance(output, torch.Tensor):
             output = output.detach()
-            if not (output.device == self._device and output.dtype == self.accumulator.dtype):
+            if (
+                output.device != self._device
+                or output.dtype != self.accumulator.dtype
+            ):
                 output = output.to(self.accumulator)
 
         self.accumulator = self._op(self.accumulator, output)
@@ -290,7 +293,4 @@ class GeometricAverage(VariableAccumulation):
 
         tensor = torch.exp(self.accumulator / self.num_examples)
 
-        if tensor.numel() == 1:
-            return tensor.item()
-
-        return tensor
+        return tensor.item() if tensor.numel() == 1 else tensor

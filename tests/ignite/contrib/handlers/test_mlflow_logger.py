@@ -336,7 +336,7 @@ def test_mlflow_bad_metric_name_handling(dirname):
             engine.state.epoch = 1
             handler(engine, mlflow_logger, event_name=Events.EPOCH_COMPLETED)
 
-            for _, v in enumerate(true_values):
+            for v in true_values:
                 engine.state.epoch += 1
                 engine.state.metrics["metric 0"] = v
                 handler(engine, mlflow_logger, event_name=Events.EPOCH_COMPLETED)
@@ -353,10 +353,10 @@ def test_mlflow_bad_metric_name_handling(dirname):
 @pytest.fixture
 def no_site_packages():
 
-    mlflow_client_modules = {}
-    for k in sys.modules:
-        if "mlflow" in k:
-            mlflow_client_modules[k] = sys.modules[k]
+    mlflow_client_modules = {
+        k: sys.modules[k] for k in sys.modules if "mlflow" in k
+    }
+
     for k in mlflow_client_modules:
         del sys.modules[k]
 

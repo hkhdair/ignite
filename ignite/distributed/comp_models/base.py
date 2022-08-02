@@ -151,9 +151,7 @@ class ComputationModel(metaclass=ABCMeta):
 
     @staticmethod
     def _decode_str(xs: torch.Tensor) -> List[str]:
-        # xs.shape = (n, size + 1), e.g. (world_size, size + 1)
-        out = [bytearray(x[: x[-1]].tolist()).decode("utf-8") for x in xs]
-        return out
+        return [bytearray(x[: x[-1]].tolist()).decode("utf-8") for x in xs]
 
     def _apply_op(
         self, tensor: torch.Tensor, device: torch.device, fn: Callable, *args: Any, **kwargs: Any
@@ -166,11 +164,12 @@ class ComputationModel(metaclass=ABCMeta):
             tensor_device = tensor.device
             tensor = tensor.to(device)
 
-        if self._collective_op_dtype is not None:
-            # cast to _collective_op_dtype if current type is not floatX
-            if tensor.dtype not in (torch.float32, torch.float64):
-                out_dtype = tensor.dtype
-                tensor = tensor.to(self._collective_op_dtype)
+        if self._collective_op_dtype is not None and tensor.dtype not in (
+            torch.float32,
+            torch.float64,
+        ):
+            out_dtype = tensor.dtype
+            tensor = tensor.to(self._collective_op_dtype)
 
         tensor = fn(tensor, *args, **kwargs)
 
@@ -178,9 +177,7 @@ class ComputationModel(metaclass=ABCMeta):
             return tensor.to(dtype=out_dtype, device=tensor_device)
         if out_dtype is not None:
             return tensor.to(dtype=out_dtype)
-        if tensor_device is not None:
-            return tensor.to(device=tensor_device)
-        return tensor
+        return tensor.to(device=tensor_device) if tensor_device is not None else tensor
 
     def _collective_op(
         self, tensor: Union[torch.Tensor, float, str], fn: Callable, *args: Any, **kwargs: Any
@@ -198,10 +195,7 @@ class ComputationModel(metaclass=ABCMeta):
         tensor = self._apply_op(tensor, device, fn, *args, **kwargs)
 
         if tensor_to_number:
-            if tensor.numel() == 1:
-                return tensor.item()
-            else:
-                return tensor.tolist()
+            return tensor.item() if tensor.numel() == 1 else tensor.tolist()
         elif tensor_to_str:
             return self._decode_str(tensor)
         return tensor

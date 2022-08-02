@@ -190,7 +190,10 @@ def test_output_handler_metric_names(dirname):
 
     wrapper(mock_engine, mock_logger, Events.ITERATION_STARTED)
 
-    assert len(wrapper.windows) == 4 and all([f"tag/a/{i}" in wrapper.windows for i in range(4)])
+    assert len(wrapper.windows) == 4 and all(
+        f"tag/a/{i}" in wrapper.windows for i in range(4)
+    )
+
     assert wrapper.windows["tag/a/0"]["win"] is not None
     assert wrapper.windows["tag/a/1"]["win"] is not None
     assert wrapper.windows["tag/a/2"]["win"] is not None
@@ -624,6 +627,7 @@ def test_weights_scalar_handler_wrong_setup():
 
 
 def test_weights_scalar_handler():
+
     class DummyModel(torch.nn.Module):
         def __init__(self):
             super(DummyModel, self).__init__()
@@ -660,8 +664,10 @@ def test_weights_scalar_handler():
                     env=mock_logger.vis.env,
                     win=None,
                     update=None,
-                    opts=wrapper.windows[tag_prefix + "weights_norm/fc1/weight"]["opts"],
-                    name=tag_prefix + "weights_norm/fc1/weight",
+                    opts=wrapper.windows[
+                        f"{tag_prefix}weights_norm/fc1/weight"
+                    ]["opts"],
+                    name=f"{tag_prefix}weights_norm/fc1/weight",
                 ),
                 call(
                     X=[5],
@@ -669,8 +675,10 @@ def test_weights_scalar_handler():
                     env=mock_logger.vis.env,
                     win=None,
                     update=None,
-                    opts=wrapper.windows[tag_prefix + "weights_norm/fc1/bias"]["opts"],
-                    name=tag_prefix + "weights_norm/fc1/bias",
+                    opts=wrapper.windows[f"{tag_prefix}weights_norm/fc1/bias"][
+                        "opts"
+                    ],
+                    name=f"{tag_prefix}weights_norm/fc1/bias",
                 ),
                 call(
                     X=[5],
@@ -678,8 +686,10 @@ def test_weights_scalar_handler():
                     env=mock_logger.vis.env,
                     win=None,
                     update=None,
-                    opts=wrapper.windows[tag_prefix + "weights_norm/fc2/weight"]["opts"],
-                    name=tag_prefix + "weights_norm/fc2/weight",
+                    opts=wrapper.windows[
+                        f"{tag_prefix}weights_norm/fc2/weight"
+                    ]["opts"],
+                    name=f"{tag_prefix}weights_norm/fc2/weight",
                 ),
                 call(
                     X=[5],
@@ -687,12 +697,15 @@ def test_weights_scalar_handler():
                     env=mock_logger.vis.env,
                     win=None,
                     update=None,
-                    opts=wrapper.windows[tag_prefix + "weights_norm/fc2/bias"]["opts"],
-                    name=tag_prefix + "weights_norm/fc2/bias",
+                    opts=wrapper.windows[f"{tag_prefix}weights_norm/fc2/bias"][
+                        "opts"
+                    ],
+                    name=f"{tag_prefix}weights_norm/fc2/bias",
                 ),
             ],
             any_order=True,
         )
+
 
     _test()
     _test(tag="tag")
@@ -812,8 +825,10 @@ def test_grads_scalar_handler(dummy_model_factory, norm_mock):
                     env=mock_logger.vis.env,
                     win=None,
                     update=None,
-                    opts=wrapper.windows[tag_prefix + "grads_norm/fc1/weight"]["opts"],
-                    name=tag_prefix + "grads_norm/fc1/weight",
+                    opts=wrapper.windows[f"{tag_prefix}grads_norm/fc1/weight"][
+                        "opts"
+                    ],
+                    name=f"{tag_prefix}grads_norm/fc1/weight",
                 ),
                 call(
                     X=[5],
@@ -821,8 +836,10 @@ def test_grads_scalar_handler(dummy_model_factory, norm_mock):
                     env=mock_logger.vis.env,
                     win=None,
                     update=None,
-                    opts=wrapper.windows[tag_prefix + "grads_norm/fc1/bias"]["opts"],
-                    name=tag_prefix + "grads_norm/fc1/bias",
+                    opts=wrapper.windows[f"{tag_prefix}grads_norm/fc1/bias"][
+                        "opts"
+                    ],
+                    name=f"{tag_prefix}grads_norm/fc1/bias",
                 ),
                 call(
                     X=[5],
@@ -830,8 +847,10 @@ def test_grads_scalar_handler(dummy_model_factory, norm_mock):
                     env=mock_logger.vis.env,
                     win=None,
                     update=None,
-                    opts=wrapper.windows[tag_prefix + "grads_norm/fc2/weight"]["opts"],
-                    name=tag_prefix + "grads_norm/fc2/weight",
+                    opts=wrapper.windows[f"{tag_prefix}grads_norm/fc2/weight"][
+                        "opts"
+                    ],
+                    name=f"{tag_prefix}grads_norm/fc2/weight",
                 ),
                 call(
                     X=[5],
@@ -839,12 +858,15 @@ def test_grads_scalar_handler(dummy_model_factory, norm_mock):
                     env=mock_logger.vis.env,
                     win=None,
                     update=None,
-                    opts=wrapper.windows[tag_prefix + "grads_norm/fc2/bias"]["opts"],
-                    name=tag_prefix + "grads_norm/fc2/bias",
+                    opts=wrapper.windows[f"{tag_prefix}grads_norm/fc2/bias"][
+                        "opts"
+                    ],
+                    name=f"{tag_prefix}grads_norm/fc2/bias",
                 ),
             ],
             any_order=True,
         )
+
 
     _test()
     _test(tag="tag")
@@ -914,8 +936,12 @@ def test_integration_no_executor(visdom_server):
     data = data["content"]["data"][0]
     assert "x" in data and "y" in data
     x_vals, y_vals = data["x"], data["y"]
-    assert all([int(x) == x_true for x, x_true in zip(x_vals, list(range(1, n_epochs * len(data) + 1)))])
-    assert all([y == y_true for y, y_true in zip(y_vals, losses)])
+    assert all(
+        int(x) == x_true
+        for x, x_true in zip(x_vals, list(range(1, n_epochs * len(data) + 1)))
+    )
+
+    assert all(y == y_true for y, y_true in zip(y_vals, losses))
     vd_logger.close()
 
 
@@ -950,8 +976,12 @@ def test_integration_with_executor(visdom_server):
     data = data["content"]["data"][0]
     assert "x" in data and "y" in data
     x_vals, y_vals = data["x"], data["y"]
-    assert all([int(x) == x_true for x, x_true in zip(x_vals, list(range(1, n_epochs * len(data) + 1)))])
-    assert all([y == y_true for y, y_true in zip(y_vals, losses)])
+    assert all(
+        int(x) == x_true
+        for x, x_true in zip(x_vals, list(range(1, n_epochs * len(data) + 1)))
+    )
+
+    assert all(y == y_true for y, y_true in zip(y_vals, losses))
 
     vd_logger.close()
 
@@ -988,8 +1018,14 @@ def test_integration_with_executor_as_context_manager(visdom_server, visdom_serv
         data = data["content"]["data"][0]
         assert "x" in data and "y" in data
         x_vals, y_vals = data["x"], data["y"]
-        assert all([int(x) == x_true for x, x_true in zip(x_vals, list(range(1, n_epochs * len(data) + 1)))])
-        assert all([y == y_true for y, y_true in zip(y_vals, losses)])
+        assert all(
+            int(x) == x_true
+            for x, x_true in zip(
+                x_vals, list(range(1, n_epochs * len(data) + 1))
+            )
+        )
+
+        assert all(y == y_true for y, y_true in zip(y_vals, losses))
 
 
 @pytest.fixture

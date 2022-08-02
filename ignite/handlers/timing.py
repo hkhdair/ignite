@@ -147,11 +147,7 @@ class Timer:
         if self.running:
             total += self._elapsed()
 
-        if self._average:
-            denominator = max(self.step_count, 1.0)
-        else:
-            denominator = 1.0
-
+        denominator = max(self.step_count, 1.0) if self._average else 1.0
         return total / denominator
 
     def step(self, *args: Any) -> None:

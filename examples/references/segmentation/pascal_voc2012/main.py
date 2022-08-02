@@ -363,16 +363,14 @@ def get_model_weights(config, logger, with_clearml):
     if with_clearml:
         from clearml import Model
 
-        if idist.get_rank() > 0:
-            idist.barrier()
-        else:
+        if idist.get_rank() <= 0:
             model_id = config.weights_path
 
             logger.info(f"Loading trained model: {model_id}")
             model = Model(model_id)
             assert model is not None, f"{model_id}"
             path = model.get_local_copy()
-            idist.barrier()
+        idist.barrier()
         path = idist.broadcast(path, src=0)
     else:
         path = config.weights_path
@@ -408,7 +406,7 @@ def evaluation(local_rank, config, logger, with_clearml):
     }
 
     if ("val_metrics" in config) and isinstance(config.val_metrics, dict):
-        val_metrics.update(config.val_metrics)
+        val_metrics |= config.val_metrics
 
     evaluator = create_evaluator(model, val_metrics, config, with_clearml, tag="val")
 

@@ -41,7 +41,7 @@ except Exception as e:
         out = out.decode("utf-8").strip()
 
         out_lower = out.lower()
-        if any([k in out_lower for k in ["error", "exception"]]):
+        if any(k in out_lower for k in ["error", "exception"]):
             raise RuntimeError(out)
 
     except docker.errors.ContainerError as e:

@@ -220,25 +220,23 @@ class Parallel:
         init_method: Optional[str] = None,
         **spawn_kwargs: Any,
     ) -> None:
-        if backend is not None:
-            if backend not in idist.available_backends():
-                raise ValueError(f"Unknown backend '{backend}'. Available backends: {idist.available_backends()}")
-        else:
+        if backend is None:
             arg_names = ["nproc_per_node", "nnodes", "node_rank", "master_addr", "master_port"]
             arg_values = [nproc_per_node, nnodes, node_rank, master_addr, master_port]
             for name, value in zip(arg_names, arg_values):
                 if value is not None:
                     raise ValueError(f"If backend is None, argument '{name}' should be also None, but given {value}")
 
+        elif backend not in idist.available_backends():
+            raise ValueError(f"Unknown backend '{backend}'. Available backends: {idist.available_backends()}")
         self.backend = backend
         self._spawn_params = None
         self.init_method = init_method
 
-        if self.backend is not None:
-            if nproc_per_node is not None:
-                self._spawn_params = self._setup_spawn_params(
-                    nproc_per_node, nnodes, node_rank, master_addr, master_port, init_method, **spawn_kwargs
-                )
+        if self.backend is not None and nproc_per_node is not None:
+            self._spawn_params = self._setup_spawn_params(
+                nproc_per_node, nnodes, node_rank, master_addr, master_port, init_method, **spawn_kwargs
+            )
 
         # The logger will be setup after the idist.initialize() call
         self._logger = None
@@ -278,8 +276,8 @@ class Parallel:
             "master_addr": master_addr,
             "master_port": master_port,
             "init_method": init_method,
-        }
-        params.update(spawn_kwargs)
+        } | spawn_kwargs
+
         return {k: v for k, v in params.items() if v is not None}
 
     def run(self, func: Callable, *args: Any, **kwargs: Any) -> None:
@@ -322,7 +320,7 @@ class Parallel:
             idist.initialize(self.backend, init_method=self.init_method)
 
         # The logger can be setup from now since idist.initialize() has been called (if needed)
-        self._logger = setup_logger(__name__ + "." + self.__class__.__name__)  # type: ignore[assignment]
+        self._logger = setup_logger(f"{__name__}.{self.__class__.__name__}")
 
         if self.backend is not None:
             if self._spawn_params is None:

@@ -97,10 +97,9 @@ class GeometricMeanRelativeAbsoluteError(_BaseRegression):
         _prediction_tensor = cast(torch.Tensor, idist.all_gather(_prediction_tensor))
         _target_tensor = cast(torch.Tensor, idist.all_gather(_target_tensor))
 
-        result = torch.exp(
+        return torch.exp(
             torch.log(
-                torch.abs(_target_tensor - _prediction_tensor) / torch.abs(_target_tensor - _target_tensor.mean())
+                torch.abs(_target_tensor - _prediction_tensor)
+                / torch.abs(_target_tensor - _target_tensor.mean())
             ).mean()
         ).item()
-
-        return result

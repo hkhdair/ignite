@@ -27,10 +27,7 @@ class _BasePrecisionRecall(_BaseClassification):
                 " 'macro', 'micro', 'weighted' and 'samples'."
             )
 
-        if average is True:
-            self._average = "macro"  # type: Optional[Union[bool, str]]
-        else:
-            self._average = average
+        self._average = "macro" if average is True else average
         self.eps = 1e-20
         self._updated = False
         super(_BasePrecisionRecall, self).__init__(
@@ -58,7 +55,7 @@ class _BasePrecisionRecall(_BaseClassification):
     def _prepare_output(self, output: Sequence[torch.Tensor]) -> Sequence[torch.Tensor]:
         y_pred, y = output[0].detach(), output[1].detach()
 
-        if self._type == "binary" or self._type == "multiclass":
+        if self._type in ["binary", "multiclass"]:
 
             num_classes = 2 if self._type == "binary" else y_pred.size(1)
             if self._type == "multiclass" and y.max() + 1 > num_classes:
@@ -150,7 +147,7 @@ class _BasePrecisionRecall(_BaseClassification):
         if self._average == "weighted":
             sum_of_weights = cast(torch.Tensor, self._weight).sum() + self.eps
             return ((fraction @ self._weight) / sum_of_weights).item()  # type: ignore
-        elif self._average == "micro" or self._average == "samples":
+        elif self._average in ["micro", "samples"]:
             return cast(torch.Tensor, fraction).item()
         elif self._average == "macro":
             return cast(torch.Tensor, fraction).mean().item()

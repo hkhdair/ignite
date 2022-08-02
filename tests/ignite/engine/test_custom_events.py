@@ -336,9 +336,7 @@ def test_custom_event_filter_with_engine():
     special_events = [1, 2, 5, 7, 17, 20]
 
     def custom_event_filter(engine, event):
-        if event in special_events:
-            return True
-        return False
+        return event in special_events
 
     def _test(event_name, event_attr, true_num_calls):
 
@@ -369,9 +367,7 @@ def test_callable_event_bad_behaviour():
     special_events = [1, 2, 5, 7, 17, 20]
 
     def custom_event_filter(engine, event):
-        if event in special_events:
-            return True
-        return False
+        return event in special_events
 
     # Check bad behaviour
     engine = Engine(lambda e, b: b)
@@ -407,6 +403,7 @@ def test_custom_callable_events():
 
 
 def test_custom_callable_events_with_engine():
+
     class CustomEvents(EventEnum):
         TEST_EVENT = "test_event"
 
@@ -415,9 +412,7 @@ def test_custom_callable_events_with_engine():
     special_events = [1, 2, 5, 7, 17, 20]
 
     def custom_event_filter(engine, event):
-        if event in special_events:
-            return True
-        return False
+        return event in special_events
 
     def _test(event_name, event_attr, true_num_calls):
         def update_fn(engine, batch):

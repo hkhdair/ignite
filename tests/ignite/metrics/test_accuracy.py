@@ -495,10 +495,15 @@ def _test_distrib_integration_list_of_tensors_or_numbers(device):
         y_preds = torch.rand(offset * idist.get_world_size(), n_classes).to(device)
 
         def update(_, i):
-            return (
-                [v for v in y_preds[i * s + rank * offset : (i + 1) * s + rank * offset, :]],
-                [v.item() for v in y_true[i * s + rank * offset : (i + 1) * s + rank * offset]],
-            )
+            return list(
+                y_preds[i * s + rank * offset : (i + 1) * s + rank * offset, :]
+            ), [
+                v.item()
+                for v in y_true[
+                    i * s + rank * offset : (i + 1) * s + rank * offset
+                ]
+            ]
+
 
         engine = Engine(update)
 
@@ -560,8 +565,8 @@ def test_distrib_gloo_cpu_or_gpu(distributed_context_single_node_gloo):
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda")
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_multilabel_input_NHW, (device,), np=nproc, do_init=True)
     gloo_hvd_executor(_test_distrib_integration_multiclass, (device,), np=nproc, do_init=True)

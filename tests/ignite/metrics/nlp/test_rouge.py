@@ -17,20 +17,7 @@ nltk.download("punkt")
 corpus = CorpusForTest()
 
 
-@pytest.mark.parametrize(
-    "candidate, reference, n, expected_precision, expected_recall",
-    [
-        ([], [], 1, 0, 0),
-        ("abc", "ab", 1, 2 / 3, 2 / 2),
-        ("abc", "ab", 2, 1 / 2, 1 / 1),
-        ("abc", "ab", 3, 0, 0),
-        ("ab", "abc", 1, 2 / 2, 2 / 3),
-        ("ab", "cde", 1, 0 / 2, 0 / 3),
-        ("aab", "aace", 1, 2 / 3, 2 / 4),
-        ("aa", "aaa", 1, 2 / 2, 2 / 3),
-        ("aaa", "aa", 1, 2 / 3, 2 / 2),
-    ],
-)
+@pytest.mark.parametrize("candidate, reference, n, expected_precision, expected_recall", [([], [], 1, 0, 0), ("abc", "ab", 1, 2 / 3, 1), ("abc", "ab", 2, 1 / 2, 1), ("abc", "ab", 3, 0, 0), ("ab", "abc", 1, 1, 2 / 3), ("ab", "cde", 1, 0 / 2, 0 / 3), ("aab", "aace", 1, 2 / 3, 2 / 4), ("aa", "aaa", 1, 1, 2 / 3), ("aaa", "aa", 1, 2 / 3, 1)])
 def test_compute_ngram_scores(candidate, reference, n, expected_precision, expected_recall):
     scores = compute_ngram_scores(candidate, reference, n=n)
     assert pytest.approx(scores.precision()) == expected_precision
@@ -61,15 +48,7 @@ def test_wrong_inputs():
         Rouge(multiref="unknown")
 
 
-@pytest.mark.parametrize(
-    "ngram, candidate, reference, expected",
-    [
-        (1, [1, 2, 3], [1, 2], (2 / 3, 2 / 2)),
-        (2, [1, 2, 3], [1, 2], (1 / 2, 1 / 1)),
-        (1, "abcdef", "zbdfz", (3 / 6, 3 / 5)),
-        (2, "abcdef", "zbdfz", (0, 0)),
-    ],
-)
+@pytest.mark.parametrize("ngram, candidate, reference, expected", [(1, [1, 2, 3], [1, 2], (2 / 3, 1)), (2, [1, 2, 3], [1, 2], (1 / 2, 1)), (1, "abcdef", "zbdfz", (3 / 6, 3 / 5)), (2, "abcdef", "zbdfz", (0, 0))])
 def test_rouge_n_alpha(ngram, candidate, reference, expected):
     for alpha in [0, 1, 0.3, 0.5, 0.8]:
         rouge = RougeN(ngram=ngram, alpha=alpha)
@@ -193,8 +172,8 @@ def test_distrib_gloo_cpu_or_gpu(distributed_context_single_node_gloo):
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda")
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_integration, (device,), np=nproc, do_init=True)
 

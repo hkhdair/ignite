@@ -41,7 +41,7 @@ def test_maximum_absolute_error():
 
     m.update((torch.from_numpy(a), torch.from_numpy(ground_truth)))
     np_max = np.max(np.abs((a - ground_truth)))
-    np_ans = np_max if np_max > np_ans else np_ans
+    np_ans = max(np_max, np_ans)
     assert m.compute() == pytest.approx(np_ans)
 
     m.update((torch.from_numpy(b), torch.from_numpy(ground_truth)))
@@ -202,8 +202,8 @@ def test_distrib_gloo_cpu_or_gpu(distributed_context_single_node_gloo):
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda")
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_compute, (device,), np=nproc, do_init=True)
     gloo_hvd_executor(_test_distrib_integration, (device,), np=nproc, do_init=True)

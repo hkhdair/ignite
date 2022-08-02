@@ -172,7 +172,13 @@ def run(
     def lr_step(engine):
         lr_scheduler.step()
 
-    pbar = tqdm(initial=0, leave=False, total=len(train_loader), desc=f"Epoch {0} - loss: {0:.4f} - lr: {lr:.4f}")
+    pbar = tqdm(
+        initial=0,
+        leave=False,
+        total=len(train_loader),
+        desc=f"Epoch 0 - loss: {0:.4f} - lr: {lr:.4f}",
+    )
+
 
     @trainer.on(Events.ITERATION_COMPLETED(every=log_interval))
     def log_training_loss(engine):

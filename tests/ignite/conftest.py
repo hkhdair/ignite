@@ -56,7 +56,7 @@ def local_rank(worker_id):
 
     if "gw" in worker_id:
         lrank = int(worker_id.replace("gw", ""))
-    elif "master" == worker_id:
+    elif worker_id == "master":
         lrank = 0
     else:
         raise RuntimeError(f"Can not get rank from worker_id={worker_id}")
@@ -199,12 +199,11 @@ def multi_node_conf(local_rank):
     node_id = int(os.environ["node_id"])
     nnodes = int(os.environ["nnodes"])
     nproc_per_node = int(os.environ["nproc_per_node"])
-    out = {
+    return {
         "world_size": nnodes * nproc_per_node,
         "rank": local_rank + node_id * nproc_per_node,
         "local_rank": local_rank,
     }
-    return out
 
 
 def _create_mnodes_dist_context(dist_info, mnodes_conf):

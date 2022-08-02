@@ -77,7 +77,7 @@ class GpuInfo(Metric):
                 warnings.warn(f"No GPU memory usage information available in {data_by_rank}")
                 continue
             mem_report = data_by_rank["fb_memory_usage"]
-            if not ("used" in mem_report and "total" in mem_report):
+            if "used" not in mem_report or "total" not in mem_report:
                 warnings.warn(
                     "GPU memory usage information does not provide used/total "
                     f"memory consumption information in {mem_report}"
@@ -92,7 +92,7 @@ class GpuInfo(Metric):
                 warnings.warn(f"No GPU utilization information available in {data_by_rank}")
                 continue
             util_report = data_by_rank["utilization"]
-            if not ("gpu_util" in util_report):
+            if "gpu_util" not in util_report:
                 warnings.warn(f"GPU utilization information does not provide 'gpu_util' information in {util_report}")
                 continue
             try:

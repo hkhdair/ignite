@@ -203,8 +203,9 @@ def test_iteration_events_are_fired(data):
 
     expected_calls = []
     for _ in range(max_epochs * num_batches):
-        expected_calls.append(call.iteration_started(engine))
-        expected_calls.append(call.iteration_complete(engine))
+        expected_calls.extend(
+            (call.iteration_started(engine), call.iteration_complete(engine))
+        )
 
     assert mock_manager.mock_calls == expected_calls
 
@@ -316,8 +317,7 @@ def test_alter_batch():
 
     def cycle(seq):
         while True:
-            for i in seq:
-                yield i
+            yield from seq
 
     small_loader_iter = cycle(small_loader)
     large_loader_iter = cycle(large_loader)
@@ -475,16 +475,14 @@ def test_run_check_triggered_events_list():
 def _test_run_check_triggered_events_on_iterator():
     def infinite_data_iterator():
         while True:
-            for i in range(100):
-                yield i
+            yield from range(100)
 
     _test_check_triggered_events(infinite_data_iterator(), max_epochs=5, epoch_length=100, exp_iter_stops=0)
     _test_check_triggered_events(infinite_data_iterator(), max_epochs=5, epoch_length=50, exp_iter_stops=0)
     _test_check_triggered_events(infinite_data_iterator(), max_epochs=5, epoch_length=150, exp_iter_stops=0)
 
     def limited_data_iterator():
-        for i in range(100):
-            yield i
+        yield from range(100)
 
     _test_check_triggered_events(limited_data_iterator(), max_epochs=1, epoch_length=100, exp_iter_stops=0)
     _test_check_triggered_events(limited_data_iterator(), max_epochs=10, epoch_length=10, exp_iter_stops=0)
@@ -642,8 +640,7 @@ def test_run_once_finite_iterator_no_epoch_length():
     unknown_size = 11
 
     def finite_unk_size_data_iter():
-        for i in range(unknown_size):
-            yield i
+        yield from range(unknown_size)
 
     bc = BatchChecker(data=list(range(unknown_size)))
 
@@ -665,8 +662,7 @@ def test_run_finite_iterator_no_epoch_length():
     unknown_size = 11
 
     def finite_unk_size_data_iter():
-        for i in range(unknown_size):
-            yield i
+        yield from range(unknown_size)
 
     bc = BatchChecker(data=list(range(unknown_size)))
 
@@ -688,8 +684,7 @@ def test_run_finite_iterator_no_epoch_length_2():
     known_size = 11
 
     def finite_size_data_iter(size):
-        for i in range(size):
-            yield i
+        yield from range(size)
 
     bc = BatchChecker(data=list(range(known_size)))
 
@@ -765,8 +760,7 @@ def test_faq_fin_iterator_unknw_size():
     torch.manual_seed(12)
 
     def finite_unk_size_data_iter():
-        for i in range(11):
-            yield i
+        yield from range(11)
 
     def train_step(trainer, batch):
         # ...
@@ -791,8 +785,7 @@ def test_faq_fin_iterator_unknw_size():
     torch.manual_seed(12)
 
     def finite_unk_size_data_iter():
-        for i in range(11):
-            yield i
+        yield from range(11)
 
     def val_step(evaluator, batch):
         # ...
@@ -817,8 +810,7 @@ def test_faq_fin_iterator():
     size = 11
 
     def finite_size_data_iter(size):
-        for i in range(size):
-            yield i
+        yield from range(size)
 
     def train_step(trainer, batch):
         # ...
@@ -845,8 +837,7 @@ def test_faq_fin_iterator():
     size = 11
 
     def finite_size_data_iter(size):
-        for i in range(size):
-            yield i
+        yield from range(size)
 
     def val_step(evaluator, batch):
         # ...

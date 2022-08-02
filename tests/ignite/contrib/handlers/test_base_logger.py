@@ -23,11 +23,12 @@ class DummyOutputHandler(BaseOutputHandler):
 class DummyOptParamsHandler(BaseOptimizerParamsHandler):
     def __call__(self, engine, logger, event_name, **kwargs):
         tag_prefix = f"{self.tag}/" if self.tag else ""
-        params = {
-            f"{tag_prefix}{self.param_name}/group_{i}": float(param_group[self.param_name])
+        return {
+            f"{tag_prefix}{self.param_name}/group_{i}": float(
+                param_group[self.param_name]
+            )
             for i, param_group in enumerate(self.optimizer.param_groups)
         }
-        return params
 
 
 class DummyLogger(BaseLogger):
@@ -203,11 +204,7 @@ def test_attach(event, n_calls, kwargs):
 
     trainer.run(data, max_epochs=n_epochs)
 
-    if isinstance(event, EventsList):
-        events = [e for e in event]
-    else:
-        events = [event]
-
+    events = list(event) if isinstance(event, EventsList) else [event]
     if len(kwargs) > 0:
         calls = [call(trainer, logger, e, **kwargs) for e in events]
     else:

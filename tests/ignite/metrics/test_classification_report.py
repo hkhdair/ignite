@@ -169,8 +169,8 @@ def test_distrib_gloo_cpu_or_gpu(local_rank, distributed_context_single_node_glo
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda")
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_integration_multiclass, (device, True), np=nproc, do_init=True)
     gloo_hvd_executor(_test_integration_multiclass, (device, False), np=nproc, do_init=True)

@@ -285,10 +285,7 @@ def test_wandb_close():
 def no_site_packages():
     import sys
 
-    wandb_client_modules = {}
-    for k in sys.modules:
-        if "wandb" in k:
-            wandb_client_modules[k] = sys.modules[k]
+    wandb_client_modules = {k: sys.modules[k] for k in sys.modules if "wandb" in k}
     for k in wandb_client_modules:
         del sys.modules[k]
 

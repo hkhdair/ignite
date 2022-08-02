@@ -40,7 +40,7 @@ def test_compute():
     m.update((torch.from_numpy(a), torch.from_numpy(ground_truth)))
 
     errors = np.abs(ground_truth - a)
-    np_prod = np.multiply.reduce(errors) * np_prod
+    np_prod *= np.multiply.reduce(errors)
     np_len = len(a)
     np_ans = np.power(np_prod, 1.0 / np_len)
     assert m.compute() == pytest.approx(np_ans)
@@ -215,8 +215,8 @@ def test_distrib_gloo_cpu_or_gpu(distributed_context_single_node_gloo):
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_distrib_hvd(gloo_hvd_executor):
 
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda")
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
 
     gloo_hvd_executor(_test_distrib_compute, (device,), np=nproc, do_init=True)
     gloo_hvd_executor(_test_distrib_integration, (device,), np=nproc, do_init=True)
@@ -226,7 +226,7 @@ def test_distrib_hvd(gloo_hvd_executor):
 @pytest.mark.skipif(not idist.has_native_dist_support, reason="Skip if no native dist support")
 @pytest.mark.skipif("MULTINODE_DISTRIB" not in os.environ, reason="Skip if not multi-node distributed")
 def test_multinode_distrib_gloo_cpu_or_gpu(distributed_context_multi_node_gloo):
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     _test_distrib_compute(device)
     _test_distrib_integration(device)
 

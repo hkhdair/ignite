@@ -79,7 +79,7 @@ class FastaiLRFinder:
         self._history = {}  # type: Dict[str, List[Any]]
         self._best_loss = None
         self._lr_schedule = None  # type: Optional[Union[LRScheduler, PiecewiseLinear]]
-        self.logger = logging.getLogger(__name__ + "." + self.__class__.__name__)
+        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     def _run(
         self,
@@ -141,20 +141,19 @@ class FastaiLRFinder:
         output = trainer.state.output
         loss = output_transform(output)
         if not isinstance(loss, float):
-            if isinstance(loss, torch.Tensor):
-                if (loss.ndimension() == 0) or (loss.ndimension() == 1 and len(loss) == 1):
-                    loss = loss.item()
-                else:
-                    raise ValueError(
-                        "if output of the engine is torch.Tensor, then "
-                        "it must be 0d torch.Tensor or 1d torch.Tensor with 1 element, "
-                        f"but got torch.Tensor of shape {loss.shape}"
-                    )
-            else:
+            if not isinstance(loss, torch.Tensor):
                 raise TypeError(
                     "output of the engine should be of type float or 0d torch.Tensor "
                     "or 1d torch.Tensor with 1 element, "
                     f"but got output of type {type(loss).__name__}"
+                )
+            if (loss.ndimension() == 0) or (loss.ndimension() == 1 and len(loss) == 1):
+                loss = loss.item()
+            else:
+                raise ValueError(
+                    "if output of the engine is torch.Tensor, then "
+                    "it must be 0d torch.Tensor or 1d torch.Tensor with 1 element, "
+                    f"but got torch.Tensor of shape {loss.shape}"
                 )
         loss = idist.all_reduce(loss)
         lr = self._lr_schedule.get_param()  # type: ignore[union-attr]

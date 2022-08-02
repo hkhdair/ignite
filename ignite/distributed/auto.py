@@ -65,7 +65,7 @@ def auto_dataloader(dataset: Dataset, **kwargs: Any) -> Union[DataLoader, "_MpDe
     rank = idist.get_rank()
     world_size = idist.get_world_size()
 
-    logger = setup_logger(__name__ + ".auto_dataloader")
+    logger = setup_logger(f"{__name__}.auto_dataloader")
     if world_size > 1:
         if "batch_size" in kwargs and kwargs["batch_size"] >= world_size:
             kwargs["batch_size"] //= world_size
@@ -74,36 +74,35 @@ def auto_dataloader(dataset: Dataset, **kwargs: Any) -> Union[DataLoader, "_MpDe
         if "num_workers" in kwargs and kwargs["num_workers"] >= nproc:
             kwargs["num_workers"] = (kwargs["num_workers"] + nproc - 1) // nproc
 
-        if "batch_sampler" not in kwargs:
-            if isinstance(dataset, IterableDataset):
-                logger.info(
-                    "Found iterable dataset, dataloader will be created without any distributed sampling. "
-                    "Please, make sure that the dataset itself produces different data on different ranks."
-                )
-            else:
-                sampler: Optional[Union[DistributedProxySampler, DistributedSampler, Sampler]]
-                sampler = kwargs.get("sampler", None)
-                if isinstance(sampler, DistributedSampler):
-                    if sampler.rank != rank:
-                        warnings.warn(f"Found distributed sampler with rank={sampler.rank}, but process rank is {rank}")
-                    if sampler.num_replicas != world_size:
-                        warnings.warn(
-                            f"Found distributed sampler with num_replicas={sampler.num_replicas}, "
-                            f"but world size is {world_size}"
-                        )
-                elif sampler is None:
-                    # removes "shuffle" from kwargs if sampler is used
-                    shuffle = kwargs.pop("shuffle", True)
-                    sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=shuffle)
-                else:
-                    sampler = DistributedProxySampler(sampler, num_replicas=world_size, rank=rank)
-                kwargs["sampler"] = sampler
-        else:
+        if "batch_sampler" in kwargs:
             warnings.warn(
                 "Found batch_sampler in provided kwargs. Please, make sure that it is compatible "
                 "with distributed configuration"
             )
 
+        elif isinstance(dataset, IterableDataset):
+            logger.info(
+                "Found iterable dataset, dataloader will be created without any distributed sampling. "
+                "Please, make sure that the dataset itself produces different data on different ranks."
+            )
+        else:
+            sampler: Optional[Union[DistributedProxySampler, DistributedSampler, Sampler]]
+            sampler = kwargs.get("sampler")
+            if isinstance(sampler, DistributedSampler):
+                if sampler.rank != rank:
+                    warnings.warn(f"Found distributed sampler with rank={sampler.rank}, but process rank is {rank}")
+                if sampler.num_replicas != world_size:
+                    warnings.warn(
+                        f"Found distributed sampler with num_replicas={sampler.num_replicas}, "
+                        f"but world size is {world_size}"
+                    )
+            elif sampler is None:
+                # removes "shuffle" from kwargs if sampler is used
+                shuffle = kwargs.pop("shuffle", True)
+                sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=shuffle)
+            else:
+                sampler = DistributedProxySampler(sampler, num_replicas=world_size, rank=rank)
+            kwargs["sampler"] = sampler
     if idist.has_xla_support and idist.backend() == idist_xla.XLA_TPU and kwargs.get("pin_memory", False):
         # TODO: How about XLA GPU ?
         warnings.warn(
@@ -188,11 +187,11 @@ def auto_model(model: nn.Module, sync_bn: bool = False, **kwargs: Any) -> nn.Mod
     .. versionchanged:: 0.4.3
         Added kwargs to ``idist.auto_model``.
     """
-    logger = setup_logger(__name__ + ".auto_model")
+    logger = setup_logger(f"{__name__}.auto_model")
 
     # Put model's parameters to device if its parameters are not on the device
     device = idist.device()
-    if not all([p.device == device for p in model.parameters()]):
+    if any(p.device != device for p in model.parameters()):
         model.to(device)
 
     # distributed data parallel model

@@ -107,11 +107,7 @@ class SSIM(Metric):
         ksize_half = (kernel_size - 1) * 0.5
         kernel = torch.linspace(-ksize_half, ksize_half, steps=kernel_size, device=self._device)
         for i, j in enumerate(kernel):
-            if min <= j <= max:
-                kernel[i] = 1 / (max - min)
-            else:
-                kernel[i] = 0
-
+            kernel[i] = 1 / (max - min) if min <= j <= max else 0
         return kernel.unsqueeze(dim=0)  # (1, kernel_size)
 
     def _gaussian(self, kernel_size: int, sigma: float) -> torch.Tensor:

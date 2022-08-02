@@ -130,17 +130,18 @@ class ClearMLLogger(BaseLogger):
         if self.bypass_mode():
             warnings.warn("ClearMLSaver: running in bypass mode")
 
+
+
             class _Stub(object):
                 def __call__(self, *_: Any, **__: Any) -> "_Stub":
                     return self
 
                 def __getattr__(self, attr: str) -> "_Stub":
-                    if attr in ("name", "id"):
-                        return ""  # type: ignore[return-value]
-                    return self
+                    return "" if attr in {"name", "id"} else self
 
                 def __setattr__(self, attr: str, val: Any) -> None:
                     pass
+
 
             self._task = _Stub()
         else:
@@ -877,7 +878,7 @@ class ClearMLSaver(DiskSaver):
         ) -> None:
             self._callback_type = callback_type
             self._slots = slots
-            self._checkpoint_key = str(checkpoint_key)
+            self._checkpoint_key = checkpoint_key
             self._filename = filename
             self._basename = basename
             self._metadata = metadata
@@ -967,8 +968,7 @@ class ClearMLSaver(DiskSaver):
         Returns:
              a local path to a downloaded copy of the artifact
         """
-        artifact = self._task.artifacts.get(filename)
-        if artifact:
+        if artifact := self._task.artifacts.get(filename):
             return artifact.get_local_copy()
         self._task.get_logger().report_text(f"Can not find artifact {filename}")
 

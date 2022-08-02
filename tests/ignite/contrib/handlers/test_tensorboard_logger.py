@@ -286,13 +286,18 @@ def test_weights_scalar_handler(dummy_model_factory):
         assert mock_logger.writer.add_scalar.call_count == 4
         mock_logger.writer.add_scalar.assert_has_calls(
             [
-                call(tag_prefix + "weights_norm/fc1/weight", 0.0, 5),
-                call(tag_prefix + "weights_norm/fc1/bias", 0.0, 5),
-                call(tag_prefix + "weights_norm/fc2/weight", 12.0, 5),
-                call(tag_prefix + "weights_norm/fc2/bias", pytest.approx(math.sqrt(12.0)), 5),
+                call(f"{tag_prefix}weights_norm/fc1/weight", 0.0, 5),
+                call(f"{tag_prefix}weights_norm/fc1/bias", 0.0, 5),
+                call(f"{tag_prefix}weights_norm/fc2/weight", 12.0, 5),
+                call(
+                    f"{tag_prefix}weights_norm/fc2/bias",
+                    pytest.approx(math.sqrt(12.0)),
+                    5,
+                ),
             ],
             any_order=True,
         )
+
 
     _test()
     _test(tag="tag")
@@ -374,13 +379,30 @@ def test_weights_hist_handler(dummy_model_factory):
         assert mock_logger.writer.add_histogram.call_count == 4
         mock_logger.writer.add_histogram.assert_has_calls(
             [
-                call(tag=tag_prefix + "weights/fc1/weight", values=ANY, global_step=5),
-                call(tag=tag_prefix + "weights/fc1/bias", values=ANY, global_step=5),
-                call(tag=tag_prefix + "weights/fc2/weight", values=ANY, global_step=5),
-                call(tag=tag_prefix + "weights/fc2/bias", values=ANY, global_step=5),
+                call(
+                    tag=f"{tag_prefix}weights/fc1/weight",
+                    values=ANY,
+                    global_step=5,
+                ),
+                call(
+                    tag=f"{tag_prefix}weights/fc1/bias",
+                    values=ANY,
+                    global_step=5,
+                ),
+                call(
+                    tag=f"{tag_prefix}weights/fc2/weight",
+                    values=ANY,
+                    global_step=5,
+                ),
+                call(
+                    tag=f"{tag_prefix}weights/fc2/bias",
+                    values=ANY,
+                    global_step=5,
+                ),
             ],
             any_order=True,
         )
+
 
     _test()
     _test(tag="tag")
@@ -460,13 +482,14 @@ def test_grads_scalar_handler(dummy_model_factory, norm_mock):
 
         mock_logger.writer.add_scalar.assert_has_calls(
             [
-                call(tag_prefix + "grads_norm/fc1/weight", ANY, 5),
-                call(tag_prefix + "grads_norm/fc1/bias", ANY, 5),
-                call(tag_prefix + "grads_norm/fc2/weight", ANY, 5),
-                call(tag_prefix + "grads_norm/fc2/bias", ANY, 5),
+                call(f"{tag_prefix}grads_norm/fc1/weight", ANY, 5),
+                call(f"{tag_prefix}grads_norm/fc1/bias", ANY, 5),
+                call(f"{tag_prefix}grads_norm/fc2/weight", ANY, 5),
+                call(f"{tag_prefix}grads_norm/fc2/bias", ANY, 5),
             ],
             any_order=True,
         )
+
         assert mock_logger.writer.add_scalar.call_count == 4
         assert norm_mock.call_count == 4
 
@@ -548,13 +571,30 @@ def test_grads_hist_handler(dummy_model_factory):
         assert mock_logger.writer.add_histogram.call_count == 4
         mock_logger.writer.add_histogram.assert_has_calls(
             [
-                call(tag=tag_prefix + "grads/fc1/weight", values=ANY, global_step=5),
-                call(tag=tag_prefix + "grads/fc1/bias", values=ANY, global_step=5),
-                call(tag=tag_prefix + "grads/fc2/weight", values=ANY, global_step=5),
-                call(tag=tag_prefix + "grads/fc2/bias", values=ANY, global_step=5),
+                call(
+                    tag=f"{tag_prefix}grads/fc1/weight",
+                    values=ANY,
+                    global_step=5,
+                ),
+                call(
+                    tag=f"{tag_prefix}grads/fc1/bias",
+                    values=ANY,
+                    global_step=5,
+                ),
+                call(
+                    tag=f"{tag_prefix}grads/fc2/weight",
+                    values=ANY,
+                    global_step=5,
+                ),
+                call(
+                    tag=f"{tag_prefix}grads/fc2/bias",
+                    values=ANY,
+                    global_step=5,
+                ),
             ],
             any_order=True,
         )
+
 
     _test()
     _test(tag="tag")
@@ -631,7 +671,7 @@ def test_integration(dirname):
     # Check if event files are present
     written_files = os.listdir(dirname)
     written_files = [f for f in written_files if "tfevents" in f]
-    assert len(written_files) > 0
+    assert written_files
 
 
 def test_integration_as_context_manager(dirname):
@@ -660,7 +700,7 @@ def test_integration_as_context_manager(dirname):
     # Check if event files are present
     written_files = os.listdir(dirname)
     written_files = [f for f in written_files if "tfevents" in f]
-    assert len(written_files) > 0
+    assert written_files
 
 
 def test_no_tensorboardX_package(dirname):

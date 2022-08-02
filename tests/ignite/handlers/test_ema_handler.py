@@ -289,8 +289,6 @@ def _test_ema_final_weight(model, device=None, ddp=False, interval=1):
         assert ema_weight.allclose(ema_weight.new_full((1, 2), 4.0625))
     elif interval == 2:
         assert ema_weight.allclose(ema_weight.new_full((1, 2), 3.5))
-    else:
-        pass
     assert model_weight.allclose(model_weight.new_full((1, 2), 5.0))
 
 
@@ -329,7 +327,7 @@ def test_ema_final_weight_distrib_gloo_cpu_or_gpu(get_dummy_model, distributed_c
 @pytest.mark.skipif(not idist.has_hvd_support, reason="Skip if no Horovod dist support")
 @pytest.mark.skipif("WORLD_SIZE" in os.environ, reason="Skip if launched as multiproc")
 def test_ema_final_weight_distrib_hvd(get_dummy_model, gloo_hvd_executor, interval):
-    nproc = 4 if not torch.cuda.is_available() else torch.cuda.device_count()
+    nproc = torch.cuda.device_count() if torch.cuda.is_available() else 4
     # pass device = None to the executor. Different from other distributed tests where the processes are
     # already spawn in the context, the processes here will be explicitly spawn by the executor, so we
     # pass None to the function, and call idist.device() in side the function to get the corresponding device

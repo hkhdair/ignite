@@ -70,7 +70,7 @@ class EarlyStopping(Serializable):
         self.trainer = trainer
         self.counter = 0
         self.best_score = None  # type: Optional[float]
-        self.logger = setup_logger(__name__ + "." + self.__class__.__name__)
+        self.logger = setup_logger(f"{__name__}.{self.__class__.__name__}")
 
     def __call__(self, engine: Engine) -> None:
         score = self.score_function(engine)

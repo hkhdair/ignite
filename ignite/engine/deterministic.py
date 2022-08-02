@@ -67,18 +67,14 @@ class ReproducibleBatchSampler(BatchSampler):
 
     def setup_batch_indices(self) -> None:
         """Setup batch indices."""
-        self.batch_indices = []
-        for batch in self.batch_sampler:
-            self.batch_indices.append(batch)
-
+        self.batch_indices = list(self.batch_sampler)
         if self.start_iteration is not None:
             self.batch_indices = self.batch_indices[self.start_iteration :]
             self.start_iteration = None
 
     def __iter__(self) -> Generator:
         self.setup_batch_indices()
-        for batch in self.batch_indices:
-            yield batch
+        yield from self.batch_indices
 
     def __len__(self) -> int:
         return len(self.batch_sampler)
@@ -114,8 +110,9 @@ def _set_rng_states(rng_states: List[Any]) -> None:
 def _repr_rng_state(rng_states: List[Any]) -> str:
     from hashlib import md5
 
-    out = " ".join([md5(str(list(s)).encode("utf-8")).hexdigest() for s in rng_states])
-    return out
+    return " ".join(
+        [md5(str(list(s)).encode("utf-8")).hexdigest() for s in rng_states]
+    )
 
 
 def keep_random_state(func: Callable) -> Callable:
@@ -214,12 +211,15 @@ class DeterministicEngine(Engine):
                 _dataloader_kind = self.state.dataloader._dataset_kind
                 can_patch_dataloader = _dataloader_kind == _DatasetKind.Map
             if can_patch_dataloader:
-                if self._dataloader_len is not None and hasattr(self.state.dataloader.sampler, "epoch"):
-                    if self._dataloader_len != self.state.epoch_length:
-                        warnings.warn(
-                            "When defined engine's epoch length is different of input dataloader length, "
-                            "distributed sampler indices can not be setup in a reproducible manner"
-                        )
+                if (
+                    self._dataloader_len is not None
+                    and hasattr(self.state.dataloader.sampler, "epoch")
+                    and self._dataloader_len != self.state.epoch_length
+                ):
+                    warnings.warn(
+                        "When defined engine's epoch length is different of input dataloader length, "
+                        "distributed sampler indices can not be setup in a reproducible manner"
+                    )
 
                 batch_sampler = self.state.dataloader.batch_sampler
                 if not (batch_sampler is None or isinstance(batch_sampler, ReproducibleBatchSampler)):
@@ -281,7 +281,7 @@ class DeterministicEngine(Engine):
     def _setup_seed(self, _: Any = None, iter_counter: Optional[int] = None, iteration: Optional[int] = None) -> None:
         if iter_counter is None:
             le = self._dataloader_len if self._dataloader_len is not None else 1
-        elif not iter_counter > 0:
+        elif iter_counter <= 0:
             raise ValueError("iter_counter should be positive value")
         else:
             le = iter_counter

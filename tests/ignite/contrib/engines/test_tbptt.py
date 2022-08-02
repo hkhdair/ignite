@@ -108,7 +108,7 @@ def _test_create_supervised_tbptt_trainer(device):
 
     # If tbptt is not use (one gradient update), the hidden to hidden weight
     # should stay zero
-    assert not model.weight_hh_l0.item() == pytest.approx(0)
+    assert model.weight_hh_l0.item() != pytest.approx(0)
 
     # Cheking forward calls
     assert forward_mock.call_count == 3

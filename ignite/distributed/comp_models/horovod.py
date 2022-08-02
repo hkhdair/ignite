@@ -43,9 +43,7 @@ if has_hvd_support:
         def create_from_context() -> Optional["_HorovodDistModel"]:
             rank = _HorovodDistModel._get_hvd_rank()
             # hvd must be initialized
-            if not rank > -1:
-                return None
-            return _HorovodDistModel()
+            return None if rank <= -1 else _HorovodDistModel()
 
         @staticmethod
         def create_from_backend(backend: str = HOROVOD, **kwargs: Any) -> "_HorovodDistModel":
@@ -68,7 +66,7 @@ if has_hvd_support:
 
         def _create_from_backend(self, backend: str, **kwargs: Any) -> None:
             self._backend = backend  # type: str
-            comm = kwargs.get("comm", None)
+            comm = kwargs.get("comm")
             hvd.init(comm=comm)
             self._setup_attrs()
             if torch.cuda.is_available():
@@ -179,10 +177,7 @@ if has_hvd_support:
             # and reduction op wont work as expected
             res = self._do_all_gather(tensor.unsqueeze(0))
             reduced_res = op(res, dim=0)
-            if isinstance(reduced_res, torch.Tensor):
-                return reduced_res
-            # output can also torch min/max_return_type: (min/max_vals, indices)
-            return reduced_res[0]
+            return reduced_res if isinstance(reduced_res, torch.Tensor) else reduced_res[0]
 
         def _do_all_gather(self, tensor: torch.Tensor) -> torch.Tensor:
             if tensor.ndimension() == 0:

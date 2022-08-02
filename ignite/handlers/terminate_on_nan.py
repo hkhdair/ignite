@@ -32,7 +32,7 @@ class TerminateOnNan:
     """
 
     def __init__(self, output_transform: Callable = lambda x: x):
-        self.logger = setup_logger(__name__ + "." + self.__class__.__name__)
+        self.logger = setup_logger(f"{__name__}.{self.__class__.__name__}")
         self.logger.addHandler(logging.StreamHandler())
         self._output_transform = output_transform
 

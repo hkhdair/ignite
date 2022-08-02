@@ -311,7 +311,7 @@ class Checkpoint(Serializable):
 
         self.to_save = to_save
         self.filename_prefix = filename_prefix
-        if isinstance(save_handler, str) or isinstance(save_handler, Path):
+        if isinstance(save_handler, (str, Path)):
             self.save_handler = DiskSaver(save_handler, create_dir=True)
         else:
             self.save_handler = save_handler  # type: ignore
@@ -371,10 +371,11 @@ class Checkpoint(Serializable):
         if len(self._saved) < 1:
             return None
 
-        if not isinstance(self.save_handler, DiskSaver):
-            return self._saved[-1].filename
-
-        return self.save_handler.dirname / self._saved[-1].filename
+        return (
+            self.save_handler.dirname / self._saved[-1].filename
+            if isinstance(self.save_handler, DiskSaver)
+            else self._saved[-1].filename
+        )
 
     def _check_lt_n_saved(self, or_equal: bool = False) -> bool:
         if self.n_saved is None:
@@ -660,7 +661,7 @@ class Checkpoint(Serializable):
         .. _DataParallel: https://pytorch.org/docs/stable/generated/torch.nn.DataParallel.html
         """
 
-        global_step = filename_components.get("global_step", None)
+        global_step = filename_components.get("global_step")
 
         filename_pattern = self._get_filename_pattern(global_step)
 
@@ -670,7 +671,7 @@ class Checkpoint(Serializable):
             for k in checkpoint:
                 name = k
         name = filename_components.get("name", name)
-        score = filename_components.get("score", None)
+        score = filename_components.get("score")
 
         filename_dict = {
             "filename_prefix": self.filename_prefix,
@@ -693,7 +694,7 @@ class Checkpoint(Serializable):
         """Method returns state dict with saved items: list of ``(priority, filename)`` pairs.
         Can be used to save internal state of the class.
         """
-        return OrderedDict([("saved", [(p, f) for p, f in self._saved])])
+        return OrderedDict([("saved", list(self._saved))])
 
     def load_state_dict(self, state_dict: Mapping) -> None:
         """Method replace internal state of the class with provided state dict data.
@@ -783,16 +784,16 @@ class DiskSaver(BaseSaveHandler):
     @staticmethod
     @idist.one_rank_only()
     def _check_and_setup(dirname: Path, create_dir: bool, require_empty: bool) -> None:
-        if create_dir:
-            if not dirname.exists():
-                dirname.mkdir(parents=True)
+        if create_dir and not dirname.exists():
+            dirname.mkdir(parents=True)
         # Ensure that dirname exists
         if not dirname.exists():
             raise ValueError(f"Directory path '{dirname}' is not found")
 
         if require_empty:
-            matched = [fname for fname in os.listdir(dirname) if fname.endswith(".pt")]
-            if len(matched) > 0:
+            if matched := [
+                fname for fname in os.listdir(dirname) if fname.endswith(".pt")
+            ]:
                 raise ValueError(
                     f"Files {matched} with extension '.pt' are already present "
                     f"in the directory {dirname}. If you want to use this "

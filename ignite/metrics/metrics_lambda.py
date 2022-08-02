@@ -126,7 +126,7 @@ class MetricsLambda(Metric):
 
     def _internal_attach(self, engine: Engine, usage: MetricUsage) -> None:
         self.engine = engine
-        for index, metric in enumerate(itertools.chain(self.args, self.kwargs.values())):
+        for metric in itertools.chain(self.args, self.kwargs.values()):
             if isinstance(metric, MetricsLambda):
                 metric._internal_attach(engine, usage)
             elif isinstance(metric, Metric):

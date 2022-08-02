@@ -27,7 +27,10 @@ class _BaseClassification(Metric):
     def _check_shape(self, output: Sequence[torch.Tensor]) -> None:
         y_pred, y = output
 
-        if not (y.ndimension() == y_pred.ndimension() or y.ndimension() + 1 == y_pred.ndimension()):
+        if (
+            y.ndimension() != y_pred.ndimension()
+            and y.ndimension() + 1 != y_pred.ndimension()
+        ):
             raise ValueError(
                 "y must have shape of (batch_size, ...) and y_pred must have "
                 "shape of (batch_size, num_categories, ...) or (batch_size, ...), "
@@ -40,10 +43,12 @@ class _BaseClassification(Metric):
         if y.ndimension() + 1 == y_pred.ndimension():
             y_pred_shape = (y_pred_shape[0],) + y_pred_shape[2:]
 
-        if not (y_shape == y_pred_shape):
+        if y_shape != y_pred_shape:
             raise ValueError("y and y_pred must have compatible shapes.")
 
-        if self._is_multilabel and not (y.shape == y_pred.shape and y.ndimension() > 1 and y.shape[1] > 1):
+        if self._is_multilabel and (
+            y.shape != y_pred.shape or y.ndimension() <= 1 or y.shape[1] <= 1
+        ):
             raise ValueError(
                 "y and y_pred must have same shape of (batch_size, num_categories, ...) and num_categories > 1."
             )

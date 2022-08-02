@@ -362,7 +362,7 @@ def _check_arg(
     if scaler:
         if amp_mode != "amp":
             raise ValueError(f"scaler argument is {scaler}, but amp_mode is {amp_mode}. Consider using amp_mode='amp'.")
-        elif amp_mode == "amp" and isinstance(scaler, bool):
+        elif isinstance(scaler, bool):
             try:
                 from torch.cuda.amp import GradScaler
             except ImportError:
@@ -548,7 +548,7 @@ def create_supervised_trainer(
             gradient_accumulation_steps,
         )
 
-    trainer = Engine(_update) if not deterministic else DeterministicEngine(_update)
+    trainer = DeterministicEngine(_update) if deterministic else Engine(_update)
     if _scaler and scaler and isinstance(scaler, bool):
         trainer.state.scaler = _scaler  # type: ignore[attr-defined]
 

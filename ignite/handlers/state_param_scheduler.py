@@ -272,7 +272,7 @@ class PiecewiseLinearStateScheduler(StateParamScheduler):
             raise TypeError(
                 f"Argument milestones_values should be a list or tuple, but given {type(milestones_values)}"
             )
-        if len(milestones_values) < 1:
+        if not milestones_values:
             raise ValueError(
                 f"Argument milestones_values should be with at least one value, but given {milestones_values}"
             )
@@ -284,7 +284,7 @@ class PiecewiseLinearStateScheduler(StateParamScheduler):
                 raise ValueError("Argument milestones_values should be a list of pairs (milestone, param_value)")
             if not isinstance(pair[0], numbers.Integral):
                 raise TypeError(f"Value of a milestone should be integer, but given {type(pair[0])}")
-            if len(milestones) > 0 and pair[0] < milestones[-1]:
+            if milestones and pair[0] < milestones[-1]:
                 raise ValueError(
                     f"Milestones should be increasing integers, but given {pair[0]} is smaller "
                     f"than the previous milestone {milestones[-1]}"

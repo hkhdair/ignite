@@ -27,7 +27,7 @@ def get_train_test_datasets(path):
         path.mkdir(parents=True)
         download = True
     else:
-        download = True if len(os.listdir(path)) < 1 else False
+        download = len(os.listdir(path)) < 1
 
     train_ds = datasets.CIFAR10(root=path, train=True, download=download, transform=train_transform)
     test_ds = datasets.CIFAR10(root=path, train=False, download=False, transform=test_transform)
@@ -43,7 +43,7 @@ def get_model(name):
     elif name in ["resnet18_QAT_8b", "resnet18_QAT_6b", "resnet18_QAT_5b", "resnet18_QAT_4b"]:
         fn = __dict__[name]
     else:
-        raise RuntimeError("Unknown model name {}".format(name))
+        raise RuntimeError(f"Unknown model name {name}")
 
     return fn(num_classes=10)
 
@@ -214,9 +214,9 @@ class ResNet_QAT_Xb(nn.Module):
             replace_stride_with_dilation = [False, False, False]
         if len(replace_stride_with_dilation) != 3:
             raise ValueError(
-                "replace_stride_with_dilation should be None "
-                "or a 3-element tuple, got {}".format(replace_stride_with_dilation)
+                f"replace_stride_with_dilation should be None or a 3-element tuple, got {replace_stride_with_dilation}"
             )
+
         self.groups = groups
         self.base_width = width_per_group
         self.conv1 = qnn.QuantConv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3, bias=False)
@@ -266,8 +266,7 @@ class ResNet_QAT_Xb(nn.Module):
                 norm_layer(planes * block.expansion),
             )
 
-        layers = []
-        layers.append(
+        layers = [
             block(
                 self.inplanes,
                 planes,
@@ -279,20 +278,21 @@ class ResNet_QAT_Xb(nn.Module):
                 norm_layer,
                 bit_width=bit_width,
             )
-        )
+        ]
+
         self.inplanes = planes * block.expansion
-        for _ in range(1, blocks):
-            layers.append(
-                block(
-                    self.inplanes,
-                    planes,
-                    groups=self.groups,
-                    base_width=self.base_width,
-                    dilation=self.dilation,
-                    norm_layer=norm_layer,
-                    bit_width=bit_width,
-                )
+        layers.extend(
+            block(
+                self.inplanes,
+                planes,
+                groups=self.groups,
+                base_width=self.base_width,
+                dilation=self.dilation,
+                norm_layer=norm_layer,
+                bit_width=bit_width,
             )
+            for _ in range(1, blocks)
+        )
 
         return nn.Sequential(*layers)
 
@@ -319,8 +319,7 @@ class ResNet_QAT_Xb(nn.Module):
 
 
 def _resnet_QAT_Xb(block, layers, **kwargs):
-    model = ResNet_QAT_Xb(block, layers, **kwargs)
-    return model
+    return ResNet_QAT_Xb(block, layers, **kwargs)
 
 
 def resnet18_QAT_8b(*args, **kwargs):

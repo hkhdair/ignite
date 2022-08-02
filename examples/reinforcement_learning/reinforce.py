@@ -41,15 +41,17 @@ def select_action(model, observation):
 
 def finish_episode(model, optimizer, gamma, eps):
     R = 0
-    policy_loss = []
     rewards = []
     for r in model.rewards[::-1]:
         R = r + gamma * R
         rewards.insert(0, R)
     rewards = torch.tensor(rewards)
     rewards = (rewards - rewards.mean()) / (rewards.std() + eps)
-    for log_prob, reward in zip(model.saved_log_probs, rewards):
-        policy_loss.append(-log_prob * reward)
+    policy_loss = [
+        -log_prob * reward
+        for log_prob, reward in zip(model.saved_log_probs, rewards)
+    ]
+
     optimizer.zero_grad()
     policy_loss = torch.cat(policy_loss).sum()
     policy_loss.backward()

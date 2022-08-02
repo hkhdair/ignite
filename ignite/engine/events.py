@@ -78,12 +78,7 @@ class CallableEventWithFilter:
             raise ValueError("Argument once should be integer and positive")
 
         if every is not None:
-            if every == 1:
-                # Just return the event itself
-                event_filter = None
-            else:
-                event_filter = self.every_event_filter(every)
-
+            event_filter = None if every == 1 else self.every_event_filter(every)
         if once is not None:
             event_filter = self.once_event_filter(once)
 
@@ -98,9 +93,7 @@ class CallableEventWithFilter:
         """A wrapper for every event filter."""
 
         def wrapper(engine: "Engine", event: int) -> bool:
-            if event % every == 0:
-                return True
-            return False
+            return event % every == 0
 
         return wrapper
 
@@ -109,9 +102,7 @@ class CallableEventWithFilter:
         """A wrapper for once event filter."""
 
         def wrapper(engine: "Engine", event: int) -> bool:
-            if event == once:
-                return True
-            return False
+            return event == once
 
         return wrapper
 
@@ -473,9 +464,8 @@ class RemovableEventHandle:
             for e in self.event_name:
                 if engine.has_event_handler(handler, e):
                     engine.remove_event_handler(handler, e)
-        else:
-            if engine.has_event_handler(handler, self.event_name):
-                engine.remove_event_handler(handler, self.event_name)
+        elif engine.has_event_handler(handler, self.event_name):
+            engine.remove_event_handler(handler, self.event_name)
 
     def __enter__(self) -> "RemovableEventHandle":
         return self
